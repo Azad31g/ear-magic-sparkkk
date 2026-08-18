@@ -1,6 +1,7 @@
 import { defineChain } from "viem";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import type { AppKitNetwork } from "@reown/appkit/networks";
+import type { Config } from "wagmi";
 
 export const robinhoodTestnet = defineChain({
   id: 46630,
@@ -25,10 +26,14 @@ export const networks: [AppKitNetwork, ...AppKitNetwork[]] = [
   robinhoodTestnet,
 ];
 
-export const wagmiAdapter = new WagmiAdapter({
-  networks,
-  projectId,
-  ssr: true,
-});
+// Guard: only create WagmiAdapter on the client (browser),
+// never on the server during SSR
+const isClient = typeof window !== "undefined";
 
-export const wagmiConfig = wagmiAdapter.wagmiConfig;
+export const wagmiAdapter = isClient
+  ? new WagmiAdapter({ networks, projectId, ssr: true })
+  : (null as unknown as InstanceType<typeof WagmiAdapter>);
+
+export const wagmiConfig = isClient
+  ? wagmiAdapter.wagmiConfig
+  : ({} as Config);
