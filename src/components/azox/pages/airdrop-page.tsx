@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
+import { ClientOnly } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, ChevronDown, CheckCircle2 } from "lucide-react";
 import {
@@ -18,11 +19,26 @@ import {
 } from "@/lib/contracts";
 import { robinhoodTestnet } from "@/lib/wagmi-config";
 
+
 const KEYS = {
   address: "azox_wallet_address",
   registered: "azox_airdrop_registered",
   date: "azox_airdrop_date",
 };
+
+const WalletButton = lazy(() =>
+  import("@/lib/appkit-runtime").then((m) => ({ default: m.WalletButton })),
+);
+
+function AppKitButton({ balance }: { balance?: "hide" }) {
+  return (
+    <ClientOnly fallback={null}>
+      <Suspense fallback={null}>
+        <WalletButton {...(balance ? { balance } : {})} />
+      </Suspense>
+    </ClientOnly>
+  );
+}
 
 const ORANGE = "#FF7A18";
 const GREEN = "#a3e635";
@@ -87,11 +103,6 @@ export function AirdropPage() {
   const [localRegistered, setLocalRegistered] = useState(false);
   const [savedAddress, setSavedAddress] = useState<string | null>(null);
   const [savedDate, setSavedDate] = useState<string | null>(null);
-  const [AppKitButton, setAppKitButton] = useState<any>(null);
-  useEffect(() => {
-    import("@reown/appkit/react").then((m) => setAppKitButton(() => m.AppKitButton));
-  }, []);
-
   useEffect(() => {
     setLocalRegistered(readStorage<boolean>(KEYS.registered, false));
     setSavedAddress(readStorage<string | null>(KEYS.address, null));
@@ -285,7 +296,7 @@ export function AirdropPage() {
               Robinhood Chain Testnet
             </span>
             <div className="flex justify-center">
-              {AppKitButton ? <AppKitButton /> : <button className="rounded-xl px-6 py-3 text-sm font-bold text-white" style={{background:"#FF7A18"}}>Connect Wallet</button>}
+              <AppKitButton />
             </div>
             <p className="text-center text-[11px] text-muted-foreground">
               One-time registration fee: {FEE_LABEL}
@@ -328,7 +339,7 @@ export function AirdropPage() {
                   {address ? shorten(address) : ""}
                 </code>
               </div>
-              {AppKitButton ? <AppKitButton balance="hide" /> : null}
+              <AppKitButton balance="hide" />
             </div>
 
             <p className="text-xs text-muted-foreground">
