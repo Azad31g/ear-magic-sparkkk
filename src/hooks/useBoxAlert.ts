@@ -41,8 +41,8 @@ export function useBoxAlert(): BoxAlert {
     };
 
     check();
-    const id = window.setInterval(check, 10_000);
-    return () => window.clearInterval(id);
+    const id = setInterval(check, 10_000);
+    return () => clearInterval(id);
   }, []);
 
   return state;

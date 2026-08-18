@@ -40,13 +40,13 @@ export function useAzoxBox() {
 
   // Tick + midnight rollover
   useEffect(() => {
-    const id = window.setInterval(() => {
+    const id = setInterval(() => {
       const d = new Date();
       setNow(d);
       const key = dateKey(d);
       setToday((prev) => (prev === key ? prev : key));
     }, 1000);
-    return () => window.clearInterval(id);
+    return () => clearInterval(id);
   }, []);
 
   useEffect(() => {

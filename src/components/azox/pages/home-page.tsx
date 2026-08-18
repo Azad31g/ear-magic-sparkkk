@@ -10,10 +10,10 @@ import { Button } from "@/components/ui/button";
 function useCountdown(seconds: number) {
   const [remaining, setRemaining] = useState(seconds);
   useEffect(() => {
-    const i = window.setInterval(() => {
+    const i = setInterval(() => {
       setRemaining((r) => (r <= 0 ? seconds : r - 1));
     }, 1000);
-    return () => window.clearInterval(i);
+    return () => clearInterval(i);
   }, [seconds]);
   const h = Math.floor(remaining / 3600);
   const m = Math.floor((remaining % 3600) / 60);

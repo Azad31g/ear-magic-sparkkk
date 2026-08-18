@@ -102,7 +102,7 @@ function ClickerGame() {
 
   useEffect(() => {
     if (!running) return;
-    const i = window.setInterval(() => {
+    const i = setInterval(() => {
       setLeft((l) => {
         if (l <= 1) {
           setRunning(false);
@@ -111,7 +111,7 @@ function ClickerGame() {
         return l - 1;
       });
     }, 1000);
-    return () => window.clearInterval(i);
+    return () => clearInterval(i);
   }, [running]);
 
   const start = () => {
@@ -195,8 +195,8 @@ function GlobalButtonGame() {
   const [won, setWon] = useState(false);
 
   useEffect(() => {
-    const i = window.setInterval(() => setLeft((l) => (l <= 0 ? 10 : l - 1)), 1000);
-    return () => window.clearInterval(i);
+    const i = setInterval(() => setLeft((l) => (l <= 0 ? 10 : l - 1)), 1000);
+    return () => clearInterval(i);
   }, []);
 
   return (

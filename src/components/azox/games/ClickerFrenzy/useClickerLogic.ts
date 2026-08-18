@@ -63,8 +63,8 @@ export function useClickerFrenzy() {
   }, []);
 
   useEffect(() => {
-    const id = window.setInterval(() => setNow(Date.now()), 100);
-    return () => window.clearInterval(id);
+    const id = setInterval(() => setNow(Date.now()), 100);
+    return () => clearInterval(id);
   }, []);
 
   const points = taps * POINTS_PER_TAP;

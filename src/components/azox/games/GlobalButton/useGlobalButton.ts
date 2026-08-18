@@ -45,8 +45,8 @@ export function useGlobalButton() {
   }, []);
 
   useEffect(() => {
-    const id = window.setInterval(() => setNow(Date.now()), 250);
-    return () => window.clearInterval(id);
+    const id = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(id);
   }, []);
 
   const slot = currentSlot(now);
