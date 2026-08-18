@@ -165,8 +165,8 @@ export function useAzoxWord() {
   // Countdown to next day.
   useEffect(() => {
     setResetIn(secondsUntilTomorrow());
-    const i = window.setInterval(() => setResetIn(secondsUntilTomorrow()), 1000);
-    return () => window.clearInterval(i);
+    const i = setInterval(() => setResetIn(secondsUntilTomorrow()), 1000);
+    return () => clearInterval(i);
   }, []);
 
   const loadWord = useCallback(
@@ -210,17 +210,17 @@ export function useAzoxWord() {
   // Per-word timer.
   useEffect(() => {
     if (phase !== "playing") return;
-    const i = window.setInterval(() => {
+    const i = setInterval(() => {
       setSecondsLeft((s) => {
         if (s <= 1) {
-          window.clearInterval(i);
+          clearInterval(i);
           setPhase("timeup");
           return 0;
         }
         return s - 1;
       });
     }, 1000);
-    return () => window.clearInterval(i);
+    return () => clearInterval(i);
   }, [phase]);
 
   // Time-up pause then advance.

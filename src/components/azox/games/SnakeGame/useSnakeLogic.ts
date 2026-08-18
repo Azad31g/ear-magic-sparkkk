@@ -162,12 +162,12 @@ export function useSnakeLogic(onGameOver?: (score: number) => void) {
   // periodic new rocks: 1 every 15s, capped at MAX_ROCKS
   useEffect(() => {
     if (state !== "playing") return;
-    const t = window.setInterval(() => {
+    const t = setInterval(() => {
       setRocks((prev) =>
         prev.length >= MAX_ROCKS ? prev : [...prev, ...makeRocks(snake, 1, prev)],
       );
     }, 15000);
-    return () => window.clearInterval(t);
+    return () => clearInterval(t);
   }, [state, snake]);
 
   const endGame = useCallback(
@@ -186,7 +186,7 @@ export function useSnakeLogic(onGameOver?: (score: number) => void) {
 
   useEffect(() => {
     if (state !== "playing") return;
-    const tick = window.setInterval(() => {
+    const tick = setInterval(() => {
       if (queued.current) {
         dirRef.current = queued.current;
         queued.current = null;
@@ -276,7 +276,7 @@ export function useSnakeLogic(onGameOver?: (score: number) => void) {
         return grown;
       });
     }, speed);
-    return () => window.clearInterval(tick);
+    return () => clearInterval(tick);
   }, [state, speed, endGame]);
 
   // keyboard

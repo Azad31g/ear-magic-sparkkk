@@ -72,7 +72,7 @@ export function useTakBomLogic(onGameOver?: (score: number) => void) {
   // countdown
   useEffect(() => {
     if (state !== "playing") return;
-    const t = window.setInterval(() => {
+    const t = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           endGame();
@@ -81,7 +81,7 @@ export function useTakBomLogic(onGameOver?: (score: number) => void) {
         return prev - 1;
       });
     }, 1000);
-    return () => window.clearInterval(t);
+    return () => clearInterval(t);
   }, [state, endGame]);
 
   // speed tier grows every 15 seconds
@@ -91,7 +91,7 @@ export function useTakBomLogic(onGameOver?: (score: number) => void) {
   // spawning
   useEffect(() => {
     if (state !== "playing") return;
-    const t = window.setInterval(() => {
+    const t = setInterval(() => {
       setObjects((prev) => {
         if (prev.length >= MAX_OBJECTS) return prev;
         const now = Date.now();
@@ -114,7 +114,7 @@ export function useTakBomLogic(onGameOver?: (score: number) => void) {
         return next;
       });
     }, SPAWN_MS);
-    return () => window.clearInterval(t);
+    return () => clearInterval(t);
   }, [state, tier]);
 
   const removeObject = useCallback((id: number) => {
