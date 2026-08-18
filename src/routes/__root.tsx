@@ -8,7 +8,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -22,23 +22,18 @@ import { ClientOnly } from "@tanstack/react-router";
 import { getSsrWagmiConfig } from "../lib/wagmi-config";
 import { lazy, Suspense } from "react";
 
-// Browser-only AppKit + WagmiAdapter provider (see appkit-runtime.tsx).
-const AppKitWagmiProvider = lazy(() =>
-  import("../lib/appkit-runtime").then((m) => ({ default: m.AppKitWagmiProvider })),
-);
-
-function WalletProvider({ children }: { children: ReactNode }) {
-  const [ssrConfig] = useState(getSsrWagmiConfig);
-  return (
-    <WagmiProvider config={ssrConfig}>
-      <ClientOnly fallback={children}>
-        <Suspense fallback={children}>
-          <AppKitWagmiProvider>{children}</AppKitWagmiProvider>
-        </Suspense>
-      </ClientOnly>
-    </WagmiProvider>
-  );
+function SsrWagmiProvider({ children }: { children: ReactNode }) {
+  return <WagmiProvider config={getSsrWagmiConfig()}>{children}</WagmiProvider>;
 }
+
+// Browser-only AppKit + WagmiAdapter provider (see appkit-runtime.tsx).
+// If the browser chunk fails to load (e.g. preview auth wall), fall back to
+// the SSR-safe WagmiProvider so the rest of the app still renders.
+const AppKitWagmiProvider = lazy(() =>
+  import("../lib/appkit-runtime")
+    .then((m) => ({ default: m.AppKitWagmiProvider }))
+    .catch(() => ({ default: SsrWagmiProvider })),
+);
 
 const queryClient = new QueryClient();
 
@@ -160,21 +155,43 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   return (
-    <WalletProvider>
-      <QueryClientProvider client={queryClient}>
-        <AzoxProvider>
-          <div className="min-h-screen bg-background text-foreground">
-            <BoxAlertBanner />
-            <TopBar />
-            <main className="mx-auto w-full max-w-md px-4 pb-28 pt-4">
-              {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-              <Outlet />
-            </main>
-            <BottomNav />
-            <Toaster />
-          </div>
-        </AzoxProvider>
-      </QueryClientProvider>
-    </WalletProvider>
+    <QueryClientProvider client={queryClient}>
+      <ClientOnly
+        fallback={
+          <WagmiProvider config={getSsrWagmiConfig()}>
+            <AppContent />
+          </WagmiProvider>
+        }
+      >
+        <Suspense
+          fallback={
+            <WagmiProvider config={getSsrWagmiConfig()}>
+              <AppContent />
+            </WagmiProvider>
+          }
+        >
+          <AppKitWagmiProvider>
+            <AppContent />
+          </AppKitWagmiProvider>
+        </Suspense>
+      </ClientOnly>
+    </QueryClientProvider>
+  );
+}
+
+function AppContent() {
+  return (
+    <AzoxProvider>
+      <div className="min-h-screen bg-background text-foreground">
+        <BoxAlertBanner />
+        <TopBar />
+        <main className="mx-auto w-full max-w-md px-4 pb-28 pt-4">
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+        </main>
+        <BottomNav />
+        <Toaster />
+      </div>
+    </AzoxProvider>
   );
 }
