@@ -25,10 +25,14 @@ export const networks: [AppKitNetwork, ...AppKitNetwork[]] = [
   robinhoodTestnet,
 ];
 
-export const wagmiAdapter = new WagmiAdapter({
-  networks,
-  projectId,
-  ssr: true,
-});
+// Guard: only create WagmiAdapter on the client (browser),
+// never on the server during SSR
+const isClient = typeof window !== "undefined";
 
-export const wagmiConfig = wagmiAdapter.wagmiConfig;
+export const wagmiAdapter = isClient
+  ? new WagmiAdapter({ networks, projectId, ssr: true })
+  : (null as unknown as InstanceType<typeof WagmiAdapter>);
+
+export const wagmiConfig = isClient
+  ? wagmiAdapter.wagmiConfig
+  : ({} as ReturnType<typeof wagmiAdapter.wagmiConfig>);

@@ -18,7 +18,15 @@ import { BottomNav } from "../components/azox/bottom-nav";
 import { BoxAlertBanner } from "../components/azox/box-alert-banner";
 import { Toaster } from "../components/ui/sonner";
 import { WagmiProvider } from "wagmi";
-import { wagmiAdapter } from "../lib/wagmi-config";
+import { createConfig, http } from "wagmi";
+import { wagmiAdapter, robinhoodTestnet } from "../lib/wagmi-config";
+
+const ssrFallbackConfig = createConfig({
+  chains: [robinhoodTestnet] as any,
+  transports: {
+    [46630]: http("https://rpc.testnet.chain.robinhood.com"),
+  },
+});
 
 const queryClient = new QueryClient();
 
@@ -171,7 +179,11 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   return (
-    <WagmiProvider config={wagmiAdapter.wagmiConfig}>
+    <WagmiProvider
+      config={
+        typeof window !== "undefined" ? wagmiAdapter.wagmiConfig : ssrFallbackConfig
+      }
+    >
       <QueryClientProvider client={queryClient}>
         <AzoxProvider>
           <div className="min-h-screen bg-background text-foreground">
