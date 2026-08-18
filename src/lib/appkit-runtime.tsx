@@ -12,7 +12,7 @@ import { networks, projectId } from "./wagmi-config";
 const wagmiAdapter = new WagmiAdapter({ networks, projectId, ssr: true });
 
 createAppKit({
-  adapters: [wagmiAdapter as import("@reown/appkit-controllers").ChainAdapter],
+  adapters: [wagmiAdapter],
   networks,
   projectId,
   metadata: {
