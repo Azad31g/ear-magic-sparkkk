@@ -12,6 +12,9 @@ import { networks, projectId } from "./wagmi-config";
 const wagmiAdapter = new WagmiAdapter({ networks, projectId, ssr: true });
 
 createAppKit({
+  // Type-only mismatch under exactOptionalPropertyTypes (optional `namespace`).
+  // Runtime value stays the real WagmiAdapter so connectors register correctly.
+  // @ts-expect-error -- see above
   adapters: [wagmiAdapter],
   networks,
   projectId,
