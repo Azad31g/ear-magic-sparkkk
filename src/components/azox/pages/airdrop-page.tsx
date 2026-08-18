@@ -87,7 +87,7 @@ export function AirdropPage() {
   const [localRegistered, setLocalRegistered] = useState(false);
   const [savedAddress, setSavedAddress] = useState<string | null>(null);
   const [savedDate, setSavedDate] = useState<string | null>(null);
-  const [AppKitButton, setAppKitButton] = useState<React.ComponentType<{ balance?: string }> | null>(null);
+  const [AppKitButton, setAppKitButton] = useState<any>(null);
   useEffect(() => {
     import("@reown/appkit/react").then((m) => setAppKitButton(() => m.AppKitButton));
   }, []);
