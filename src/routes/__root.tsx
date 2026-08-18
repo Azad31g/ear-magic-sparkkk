@@ -147,21 +147,43 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   return (
-    <WalletProvider>
-      <QueryClientProvider client={queryClient}>
-        <AzoxProvider>
-          <div className="min-h-screen bg-background text-foreground">
-            <BoxAlertBanner />
-            <TopBar />
-            <main className="mx-auto w-full max-w-md px-4 pb-28 pt-4">
-              {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-              <Outlet />
-            </main>
-            <BottomNav />
-            <Toaster />
-          </div>
-        </AzoxProvider>
-      </QueryClientProvider>
-    </WalletProvider>
+    <QueryClientProvider client={queryClient}>
+      <ClientOnly
+        fallback={
+          <WagmiProvider config={getSsrWagmiConfig()}>
+            <AppContent />
+          </WagmiProvider>
+        }
+      >
+        <Suspense
+          fallback={
+            <WagmiProvider config={getSsrWagmiConfig()}>
+              <AppContent />
+            </WagmiProvider>
+          }
+        >
+          <AppKitWagmiProvider>
+            <AppContent />
+          </AppKitWagmiProvider>
+        </Suspense>
+      </ClientOnly>
+    </QueryClientProvider>
+  );
+}
+
+function AppContent() {
+  return (
+    <AzoxProvider>
+      <div className="min-h-screen bg-background text-foreground">
+        <BoxAlertBanner />
+        <TopBar />
+        <main className="mx-auto w-full max-w-md px-4 pb-28 pt-4">
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+        </main>
+        <BottomNav />
+        <Toaster />
+      </div>
+    </AzoxProvider>
   );
 }
