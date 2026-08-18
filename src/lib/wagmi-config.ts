@@ -1,6 +1,7 @@
 import { defineChain } from "viem";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import type { AppKitNetwork } from "@reown/appkit/networks";
+import type { Config } from "wagmi";
 
 export const robinhoodTestnet = defineChain({
   id: 46630,
@@ -35,4 +36,4 @@ export const wagmiAdapter = isClient
 
 export const wagmiConfig = isClient
   ? wagmiAdapter.wagmiConfig
-  : ({} as ReturnType<typeof wagmiAdapter.wagmiConfig>);
+  : ({} as Config);
