@@ -18,30 +18,27 @@ export default defineConfig({
   },
   vite: {
     resolve: {
-      alias: [
-        {
-          // Vite treats the bare specifier "events" as a Node builtin and
-          // stubs it out with __vite-browser-external ({}), so WalletConnect's
-          // `import EventEmitter from "events"` yields `undefined` and
-          // `new EventEmitter()` throws "default is not a constructor" —
-          // which aborts UniversalProvider.init() and leaves AppKit without
-          // its walletConnect connector. Point it at the real npm polyfill.
-          find: /^events$/,
-          replacement: require.resolve("events/"),
-        },
-        {
-          // The published "exports" map resolves to the CJS build in the
-          // production bundle, where `new UniversalProvider()` fails with
-          // "default is not a constructor". Force the ESM build.
-          find: /^@walletconnect\/universal-provider$/,
-          replacement: fileURLToPath(
-            new URL(
-              "./node_modules/@walletconnect/universal-provider/dist/index.js",
-              import.meta.url,
-            ),
+      // NOTE: must stay an object map. The shared Lovable config already sets
+      // `resolve.alias` as an object ({ "@": ... }); passing an array here makes
+      // mergeConfig produce a malformed array alias list that Vite ignores.
+      alias: {
+        // Vite treats the bare specifier "events" as a Node builtin and stubs it
+        // with __vite-browser-external ({}) in the browser bundle. WalletConnect's
+        // `import EventEmitter from "events"` then yields undefined, and
+        // `new EventEmitter()` throws "default is not a constructor" — which aborts
+        // UniversalProvider.init() and leaves AppKit without its walletConnect
+        // connector ("WalletConnectConnector not found"). Point it at the real
+        // npm `events` polyfill instead.
+        events: require.resolve("events/"),
+        // The published "exports" map resolves to the CJS build in the production
+        // bundle, where `new UniversalProvider()` fails. Force the ESM build.
+        "@walletconnect/universal-provider": fileURLToPath(
+          new URL(
+            "./node_modules/@walletconnect/universal-provider/dist/index.js",
+            import.meta.url,
           ),
-        },
-      ],
+        ),
+      },
     },
   },
 });
