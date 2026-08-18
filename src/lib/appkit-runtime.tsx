@@ -48,6 +48,17 @@ function patchTelegramWindowOpen() {
 
 patchTelegramWindowOpen();
 
+// DIAGNOSTIC: log Telegram environment
+if (typeof window !== "undefined") {
+  const tg = (window as Record<string, unknown>)?.Telegram as Record<string, unknown> | undefined;
+  console.info("[appkit-runtime] environment", {
+    isTelegram: Boolean(tg?.WebApp),
+    platform: (tg?.WebApp as Record<string, unknown>)?.platform,
+    initData: Boolean((tg?.WebApp as Record<string, unknown>)?.initData),
+    href: window.location.href,
+  });
+}
+
 // Module scope, exactly once — not inside a React component or useEffect.
 // cookieStorage keeps the WalletConnect session recoverable in the Telegram
 // WebView, where localStorage can be wiped when the Mini App is re-opened

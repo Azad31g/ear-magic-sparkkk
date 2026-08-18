@@ -112,6 +112,29 @@ export function AirdropPage() {
     setSavedDate(readStorage<string | null>(KEYS.date, null));
   }, []);
 
+  useEffect(() => {
+    const handler = () => {
+      console.info("[airdrop] visibilitychange", {
+        state: document.visibilityState,
+        isConnected,
+        address,
+        chainId,
+        href: window.location.href,
+      });
+    };
+    document.addEventListener("visibilitychange", handler);
+    return () => document.removeEventListener("visibilitychange", handler);
+  }, [isConnected, address, chainId]);
+
+  useEffect(() => {
+    console.info("[airdrop] account:state", {
+      isConnected,
+      address,
+      chainId,
+      timestamp: Date.now(),
+    });
+  }, [isConnected, address, chainId]);
+
   const { data: balance } = useBalance({
     address,
     chainId: robinhoodTestnet.id,
@@ -201,10 +224,43 @@ export function AirdropPage() {
         account: address,
       });
       console.info("[airdrop] simulate:ok", sim.request);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error("[airdrop] simulate:failed", err);
-      setFlowError(msg);
+    } catch (err: unknown) {
+      const e = err as Record<string, unknown>;
+      console.error("[airdrop] simulate:FULL_ERROR", {
+        name: e?.name,
+        shortMessage: e?.shortMessage,
+        message: e?.message,
+        details: e?.details,
+        cause: e?.cause,
+        metaMessages: e?.metaMessages,
+        code: e?.code,
+        fullError: String(err),
+      });
+
+      // Log wagmiConfig state
+      try {
+        const client = wagmiConfig.getClient({ chainId: 46630 });
+        console.info("[airdrop] wagmiConfig.getClient(46630):OK", {
+          transport: client?.transport,
+          chain: client?.chain?.id,
+        });
+      } catch (clientErr) {
+        console.error("[airdrop] wagmiConfig.getClient(46630):FAILED", clientErr);
+      }
+
+      console.info("[airdrop] wagmiConfig.chains", wagmiConfig.chains.map(c => ({ id: c.id, name: c.name })));
+      console.info("[airdrop] wagmiConfig.connectors", wagmiConfig.connectors.map(c => ({ id: c.id, name: c.name, type: c.type })));
+      
+      console.info("[airdrop] simulate params", {
+        address: AZOX_AIRDROP_ADDRESS,
+        functionName: "register",
+        value: REGISTRATION_FEE.toString(),
+        chainId: robinhoodTestnet.id,
+        account: address,
+        walletChainId: chainId,
+      });
+
+      setFlowError(String(e?.shortMessage ?? e?.message ?? err));
       return;
     }
 
