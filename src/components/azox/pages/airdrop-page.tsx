@@ -227,13 +227,13 @@ export function AirdropPage() {
     } catch (err: unknown) {
       const e = err as Record<string, unknown>;
       console.error("[airdrop] simulate:FULL_ERROR", {
-        name: e?.name,
-        shortMessage: e?.shortMessage,
-        message: e?.message,
-        details: e?.details,
-        cause: e?.cause,
-        metaMessages: e?.metaMessages,
-        code: e?.code,
+        name: e?.["name"],
+        shortMessage: e?.["shortMessage"],
+        message: e?.["message"],
+        details: e?.["details"],
+        cause: e?.["cause"],
+        metaMessages: e?.["metaMessages"],
+        code: e?.["code"],
         fullError: String(err),
       });
 
@@ -249,7 +249,7 @@ export function AirdropPage() {
       }
 
       console.info("[airdrop] wagmiConfig.chains", wagmiConfig.chains.map(c => ({ id: c.id, name: c.name })));
-      console.info("[airdrop] wagmiConfig.connectors", wagmiConfig.connectors.map(c => ({ id: c.id, name: c.name, type: c.type })));
+      console.info("[airdrop] wagmiConfig.connectors", wagmiConfig.connectors.map(c => ({ id: c["id"], name: c["name"], type: c["type"] })));
       
       console.info("[airdrop] simulate params", {
         address: AZOX_AIRDROP_ADDRESS,
@@ -260,7 +260,7 @@ export function AirdropPage() {
         walletChainId: chainId,
       });
 
-      setFlowError(String(e?.shortMessage ?? e?.message ?? err));
+      setFlowError(String(e?.["shortMessage"] ?? e?.["message"] ?? err));
       return;
     }
 
