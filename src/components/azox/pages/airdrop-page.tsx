@@ -9,7 +9,6 @@ import {
   useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
-import { AppKitButton } from "@reown/appkit/react";
 import { formatEther } from "viem";
 import { readStorage, writeStorage } from "@/lib/points";
 import {
@@ -88,6 +87,10 @@ export function AirdropPage() {
   const [localRegistered, setLocalRegistered] = useState(false);
   const [savedAddress, setSavedAddress] = useState<string | null>(null);
   const [savedDate, setSavedDate] = useState<string | null>(null);
+  const [AppKitButton, setAppKitButton] = useState<any>(null);
+  useEffect(() => {
+    import("@reown/appkit/react").then((m) => setAppKitButton(() => m.AppKitButton));
+  }, []);
 
   useEffect(() => {
     setLocalRegistered(readStorage<boolean>(KEYS.registered, false));
@@ -143,8 +146,8 @@ export function AirdropPage() {
     setSavedDate(today);
     setConfetti(true);
     void refetchEligible();
-    const t = window.setTimeout(() => setConfetti(false), 2200);
-    return () => window.clearTimeout(t);
+    const t = setTimeout(() => setConfetti(false), 2200);
+    return () => clearTimeout(t);
   }, [isConfirmed, address, refetchEligible]);
 
   const isWrongNetwork = isConnected && chainId !== robinhoodTestnet.id;
@@ -282,7 +285,7 @@ export function AirdropPage() {
               Robinhood Chain Testnet
             </span>
             <div className="flex justify-center">
-              <AppKitButton />
+              {AppKitButton ? <AppKitButton /> : <button className="rounded-xl px-6 py-3 text-sm font-bold text-white" style={{background:"#FF7A18"}}>Connect Wallet</button>}
             </div>
             <p className="text-center text-[11px] text-muted-foreground">
               One-time registration fee: {FEE_LABEL}
@@ -325,7 +328,7 @@ export function AirdropPage() {
                   {address ? shorten(address) : ""}
                 </code>
               </div>
-              <AppKitButton balance="hide" />
+              {AppKitButton ? <AppKitButton balance="hide" /> : null}
             </div>
 
             <p className="text-xs text-muted-foreground">
