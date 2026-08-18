@@ -6,10 +6,12 @@ import {
   useAccount,
   useBalance,
   useReadContract,
+  useConfig,
   useSwitchChain,
   useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
+import { simulateContract, waitForTransactionReceipt } from "@wagmi/core";
 import { formatEther } from "viem";
 import { readStorage, writeStorage } from "@/lib/points";
 import {
@@ -97,6 +99,7 @@ function Confetti() {
 export function AirdropPage() {
   const { address, isConnected, chainId } = useAccount();
   const { switchChain, isPending: isSwitching } = useSwitchChain();
+  const wagmiConfig = useConfig();
 
   const [confetti, setConfetti] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -430,13 +433,16 @@ export function AirdropPage() {
               {FEE_LABEL} • One-time fee
             </p>
 
-            {txError && (
+            {(flowError || txError) && (
               <div className="space-y-1 text-center">
                 <p className="text-[11px]" style={{ color: "#ef4444" }}>
-                  ❌ {txError.message.slice(0, 140)}
+                  ❌ {(flowError ?? txError?.message ?? "").slice(0, 200)}
                 </p>
                 <button
-                  onClick={() => resetTx()}
+                  onClick={() => {
+                    setFlowError(null);
+                    resetTx();
+                  }}
                   className="text-[11px] underline"
                   style={{ color: ORANGE }}
                 >
