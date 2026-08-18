@@ -29,7 +29,7 @@ export const APP_URL = "https://ear-magic-sparkkk.lovable.app";
 // Telegram Mini App link (https://t.me/<bot>/<app>). Used as the WalletConnect
 // return target so the wallet sends the user back into Telegram after
 // approving. Leave empty until the real bot link is known — never guess one.
-export const TELEGRAM_APP_URL = "";
+export const TELEGRAM_APP_URL = "https://t.me/AZOX_Airdrop_bot?startapp";
 
 export const networks: [AppKitNetwork, ...AppKitNetwork[]] = [
   robinhoodTestnet,
