@@ -8,7 +8,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -26,19 +26,6 @@ import { lazy, Suspense } from "react";
 const AppKitWagmiProvider = lazy(() =>
   import("../lib/appkit-runtime").then((m) => ({ default: m.AppKitWagmiProvider })),
 );
-
-function WalletProvider({ children }: { children: ReactNode }) {
-  const [ssrConfig] = useState(getSsrWagmiConfig);
-  return (
-    <WagmiProvider config={ssrConfig}>
-      <ClientOnly fallback={children}>
-        <Suspense fallback={children}>
-          <AppKitWagmiProvider>{children}</AppKitWagmiProvider>
-        </Suspense>
-      </ClientOnly>
-    </WagmiProvider>
-  );
-}
 
 const queryClient = new QueryClient();
 
