@@ -239,7 +239,9 @@ export function AirdropPage() {
 
       // Log wagmiConfig state
       try {
-        const client = wagmiConfig.getClient({ chainId: 46630 });
+        const client = wagmiConfig.getClient({
+          chainId: robinhoodTestnet.id,
+        }) as { transport?: unknown; chain?: { id?: number } } | undefined;
         console.info("[airdrop] wagmiConfig.getClient(46630):OK", {
           transport: client?.transport,
           chain: client?.chain?.id,
