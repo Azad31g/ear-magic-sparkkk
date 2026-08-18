@@ -9,7 +9,6 @@ import {
   useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
-import { AppKitButton } from "@reown/appkit/react";
 import { formatEther } from "viem";
 import { readStorage, writeStorage } from "@/lib/points";
 import {
