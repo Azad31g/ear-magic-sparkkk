@@ -10,33 +10,115 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AirdropRouteImport } from './routes/airdrop'
+import { Route as GamingRouteImport } from './routes/gaming'
+import { Route as LeaderboardRouteImport } from './routes/leaderboard'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as TasksRouteImport } from './routes/tasks'
+import { Route as GamesGameRouteImport } from './routes/games.$game'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AirdropRoute = AirdropRouteImport.update({
+  id: '/airdrop',
+  path: '/airdrop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GamingRoute = GamingRouteImport.update({
+  id: '/gaming',
+  path: '/gaming',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeaderboardRoute = LeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TasksRoute = TasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GamesGameRoute = GamesGameRouteImport.update({
+  id: '/games/$game',
+  path: '/games/$game',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/airdrop': typeof AirdropRoute
+  '/gaming': typeof GamingRoute
+  '/leaderboard': typeof LeaderboardRoute
+  '/profile': typeof ProfileRoute
+  '/tasks': typeof TasksRoute
+  '/games/$game': typeof GamesGameRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/airdrop': typeof AirdropRoute
+  '/gaming': typeof GamingRoute
+  '/leaderboard': typeof LeaderboardRoute
+  '/profile': typeof ProfileRoute
+  '/tasks': typeof TasksRoute
+  '/games/$game': typeof GamesGameRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/airdrop': typeof AirdropRoute
+  '/gaming': typeof GamingRoute
+  '/leaderboard': typeof LeaderboardRoute
+  '/profile': typeof ProfileRoute
+  '/tasks': typeof TasksRoute
+  '/games/$game': typeof GamesGameRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/airdrop'
+    | '/gaming'
+    | '/leaderboard'
+    | '/profile'
+    | '/tasks'
+    | '/games/$game'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/airdrop'
+    | '/gaming'
+    | '/leaderboard'
+    | '/profile'
+    | '/tasks'
+    | '/games/$game'
+  id:
+    | '__root__'
+    | '/'
+    | '/airdrop'
+    | '/gaming'
+    | '/leaderboard'
+    | '/profile'
+    | '/tasks'
+    | '/games/$game'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AirdropRoute: typeof AirdropRoute
+  GamingRoute: typeof GamingRoute
+  LeaderboardRoute: typeof LeaderboardRoute
+  ProfileRoute: typeof ProfileRoute
+  TasksRoute: typeof TasksRoute
+  GamesGameRoute: typeof GamesGameRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +130,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/airdrop': {
+      id: '/airdrop'
+      path: '/airdrop'
+      fullPath: '/airdrop'
+      preLoaderRoute: typeof AirdropRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gaming': {
+      id: '/gaming'
+      path: '/gaming'
+      fullPath: '/gaming'
+      preLoaderRoute: typeof GamingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leaderboard': {
+      id: '/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/leaderboard'
+      preLoaderRoute: typeof LeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tasks': {
+      id: '/tasks'
+      path: '/tasks'
+      fullPath: '/tasks'
+      preLoaderRoute: typeof TasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/games/$game': {
+      id: '/games/$game'
+      path: '/games/$game'
+      fullPath: '/games/$game'
+      preLoaderRoute: typeof GamesGameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AirdropRoute: AirdropRoute,
+  GamingRoute: GamingRoute,
+  LeaderboardRoute: LeaderboardRoute,
+  ProfileRoute: ProfileRoute,
+  TasksRoute: TasksRoute,
+  GamesGameRoute: GamesGameRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
