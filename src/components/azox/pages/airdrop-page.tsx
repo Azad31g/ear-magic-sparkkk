@@ -328,7 +328,7 @@ export function AirdropPage() {
                   {address ? shorten(address) : ""}
                 </code>
               </div>
-              <AppKitButton balance="hide" />
+              {AppKitButton ? <AppKitButton balance="hide" /> : null}
             </div>
 
             <p className="text-xs text-muted-foreground">
