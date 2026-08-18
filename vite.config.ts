@@ -17,19 +17,31 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
+    plugins: [
+      {
+        // Vite/Rolldown treats the bare specifier "events" as a Node builtin and
+        // stubs it with __vite-browser-external ({}) in the browser bundle, ahead
+        // of resolve.alias. WalletConnect's `import EventEmitter from "events"`
+        // then yields undefined and `new EventEmitter()` throws
+        // "default is not a constructor", which aborts UniversalProvider.init()
+        // and leaves AppKit without its walletConnect connector
+        // ("WalletConnectConnector not found"). Resolve it to the real npm
+        // `events` polyfill in the client bundle only; the server keeps the
+        // native Node builtin.
+        name: "azox-events-browser-polyfill",
+        enforce: "pre" as const,
+        resolveId(this: { environment?: { name?: string } }, id: string) {
+          if (id !== "events" && id !== "node:events") return null;
+          if (this.environment?.name !== "client") return null;
+          return eventsPolyfill;
+        },
+      },
+    ],
     resolve: {
       // NOTE: must stay an object map. The shared Lovable config already sets
       // `resolve.alias` as an object ({ "@": ... }); passing an array here makes
       // mergeConfig produce a malformed array alias list that Vite ignores.
       alias: {
-        // Vite treats the bare specifier "events" as a Node builtin and stubs it
-        // with __vite-browser-external ({}) in the browser bundle. WalletConnect's
-        // `import EventEmitter from "events"` then yields undefined, and
-        // `new EventEmitter()` throws "default is not a constructor" — which aborts
-        // UniversalProvider.init() and leaves AppKit without its walletConnect
-        // connector ("WalletConnectConnector not found"). Point it at the real
-        // npm `events` polyfill instead.
-        events: require.resolve("events/"),
         // The published "exports" map resolves to the CJS build in the production
         // bundle, where `new UniversalProvider()` fails. Force the ESM build.
         "@walletconnect/universal-provider": fileURLToPath(
@@ -42,3 +54,4 @@ export default defineConfig({
     },
   },
 });
+
