@@ -146,8 +146,8 @@ export function AirdropPage() {
     setSavedDate(today);
     setConfetti(true);
     void refetchEligible();
-    const t = window.setTimeout(() => setConfetti(false), 2200);
-    return () => window.clearTimeout(t);
+    const t = setTimeout(() => setConfetti(false), 2200);
+    return () => clearTimeout(t);
   }, [isConfirmed, address, refetchEligible]);
 
   const isWrongNetwork = isConnected && chainId !== robinhoodTestnet.id;
