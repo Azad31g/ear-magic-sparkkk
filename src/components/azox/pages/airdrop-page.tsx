@@ -132,12 +132,14 @@ export function AirdropPage() {
   });
 
   const {
-    writeContract,
+    writeContractAsync,
     data: txHash,
     isPending: isTxPending,
     error: txError,
     reset: resetTx,
   } = useWriteContract();
+
+  const [flowError, setFlowError] = useState<string | null>(null);
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
     useWaitForTransactionReceipt({ hash: txHash });
