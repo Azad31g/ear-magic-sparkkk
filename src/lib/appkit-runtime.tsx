@@ -72,12 +72,12 @@ createAppKit({
     // Production origin — must match the deployed app, not a preview URL.
     url: APP_URL,
     icons: [`${APP_URL}/favicon.png`],
-    // Tells the wallet where to send the user back after approval. Inside
-    // Telegram that must be the Mini App link, otherwise the deployed app.
-    redirect: {
-      native: "",
-      universal: TELEGRAM_APP_URL || APP_URL,
-    },
+    // WalletConnect honours metadata.redirect at runtime (it tells the wallet
+    // where to send the user back after approval). It is missing from AppKit's
+    // Metadata type in this version, hence the cast.
+    ...({
+      redirect: { native: "", universal: TELEGRAM_APP_URL || APP_URL },
+    } as Record<string, unknown>),
   },
   features: { analytics: false },
 });
