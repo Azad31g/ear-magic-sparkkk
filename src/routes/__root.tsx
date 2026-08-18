@@ -22,18 +22,19 @@ import { ClientOnly } from "@tanstack/react-router";
 import { getSsrWagmiConfig } from "../lib/wagmi-config";
 import { lazy, Suspense } from "react";
 
-function SsrWagmiProvider({ children }: { children: ReactNode }) {
-  return <WagmiProvider config={getSsrWagmiConfig()}>{children}</WagmiProvider>;
-}
 
 // Browser-only AppKit + WagmiAdapter provider (see appkit-runtime.tsx).
-// If the browser chunk fails to load (e.g. preview auth wall), fall back to
-// the SSR-safe WagmiProvider so the rest of the app still renders.
+// No silent fallback: if this chunk fails to load, the error must surface
+// instead of downgrading the app to a connector-free wagmi config.
 const AppKitWagmiProvider = lazy(() =>
   import("../lib/appkit-runtime")
     .then((m) => ({ default: m.AppKitWagmiProvider }))
-    .catch(() => ({ default: SsrWagmiProvider })),
+    .catch((err) => {
+      console.error("AppKit runtime failed to load", err);
+      throw err;
+    }),
 );
+
 
 const queryClient = new QueryClient();
 
