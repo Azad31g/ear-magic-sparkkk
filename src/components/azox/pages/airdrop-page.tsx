@@ -6,10 +6,12 @@ import {
   useAccount,
   useBalance,
   useReadContract,
+  useConfig,
   useSwitchChain,
   useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
+import { simulateContract, waitForTransactionReceipt } from "@wagmi/core";
 import { formatEther } from "viem";
 import { readStorage, writeStorage } from "@/lib/points";
 import {
@@ -97,6 +99,7 @@ function Confetti() {
 export function AirdropPage() {
   const { address, isConnected, chainId } = useAccount();
   const { switchChain, isPending: isSwitching } = useSwitchChain();
+  const wagmiConfig = useConfig();
 
   const [confetti, setConfetti] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -132,12 +135,14 @@ export function AirdropPage() {
   });
 
   const {
-    writeContract,
+    writeContractAsync,
     data: txHash,
     isPending: isTxPending,
     error: txError,
     reset: resetTx,
   } = useWriteContract();
+
+  const [flowError, setFlowError] = useState<string | null>(null);
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
     useWaitForTransactionReceipt({ hash: txHash });
@@ -166,15 +171,63 @@ export function AirdropPage() {
   const isRegistered = Boolean(isEligible) || localRegistered;
   const busy = isTxPending || isConfirming;
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     resetTx();
-    writeContract({
+    setFlowError(null);
+
+    const params = {
       address: AZOX_AIRDROP_ADDRESS,
       abi: AZOX_AIRDROP_ABI,
       functionName: "register",
       value: REGISTRATION_FEE,
       chainId: robinhoodTestnet.id,
+    } as const;
+
+    console.info("[airdrop] register:start", {
+      account: address,
+      walletChainId: chainId,
+      targetChainId: robinhoodTestnet.id,
+      contract: AZOX_AIRDROP_ADDRESS,
+      valueWei: REGISTRATION_FEE.toString(),
+      balanceWei: balance?.value?.toString(),
     });
+
+    try {
+      // Fail loudly *before* asking the wallet: surfaces revert reasons
+      // ("Wrong fee", "Already registered", registration closed…) instead of
+      // a silent no-op.
+      const sim = await simulateContract(wagmiConfig, {
+        ...params,
+        account: address,
+      });
+      console.info("[airdrop] simulate:ok", sim.request);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("[airdrop] simulate:failed", err);
+      setFlowError(msg);
+      return;
+    }
+
+    try {
+      const hash = await writeContractAsync(params);
+      console.info("[airdrop] tx:submitted", hash);
+      const receipt = await waitForTransactionReceipt(wagmiConfig, {
+        hash,
+        chainId: robinhoodTestnet.id,
+      });
+      console.info("[airdrop] tx:receipt", {
+        status: receipt.status,
+        hash: receipt.transactionHash,
+        blockNumber: receipt.blockNumber.toString(),
+      });
+      if (receipt.status !== "success") {
+        setFlowError(`Transaction reverted (${receipt.transactionHash})`);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("[airdrop] tx:failed", err);
+      setFlowError(msg);
+    }
   };
 
   const displayAddress = address ?? savedAddress;
@@ -380,13 +433,16 @@ export function AirdropPage() {
               {FEE_LABEL} • One-time fee
             </p>
 
-            {txError && (
+            {(flowError || txError) && (
               <div className="space-y-1 text-center">
                 <p className="text-[11px]" style={{ color: "#ef4444" }}>
-                  ❌ {txError.message.slice(0, 140)}
+                  ❌ {(flowError ?? txError?.message ?? "").slice(0, 200)}
                 </p>
                 <button
-                  onClick={() => resetTx()}
+                  onClick={() => {
+                    setFlowError(null);
+                    resetTx();
+                  }}
                   className="text-[11px] underline"
                   style={{ color: ORANGE }}
                 >
