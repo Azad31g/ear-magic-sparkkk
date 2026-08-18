@@ -8,7 +8,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -18,49 +18,30 @@ import { BottomNav } from "../components/azox/bottom-nav";
 import { BoxAlertBanner } from "../components/azox/box-alert-banner";
 import { Toaster } from "../components/ui/sonner";
 import { WagmiProvider } from "wagmi";
-import { createConfig, http } from "wagmi";
-import { wagmiAdapter, robinhoodTestnet } from "../lib/wagmi-config";
+import { ClientOnly } from "@tanstack/react-router";
+import { getSsrWagmiConfig } from "../lib/wagmi-config";
+import { lazy, Suspense } from "react";
 
-const ssrFallbackConfig = createConfig({
-  chains: [robinhoodTestnet] as any,
-  transports: {
-    [46630]: http("https://rpc.testnet.chain.robinhood.com"),
-  },
-});
+// Browser-only AppKit + WagmiAdapter provider (see appkit-runtime.tsx).
+const AppKitWagmiProvider = lazy(() =>
+  import("../lib/appkit-runtime").then((m) => ({ default: m.AppKitWagmiProvider })),
+);
+
+function WalletProvider({ children }: { children: ReactNode }) {
+  const [ssrConfig] = useState(getSsrWagmiConfig);
+  return (
+    <WagmiProvider config={ssrConfig}>
+      <ClientOnly fallback={children}>
+        <Suspense fallback={children}>
+          <AppKitWagmiProvider>{children}</AppKitWagmiProvider>
+        </Suspense>
+      </ClientOnly>
+    </WagmiProvider>
+  );
+}
 
 const queryClient = new QueryClient();
 
-function AppKitInit() {
-  useEffect(() => {
-    let initialized = false;
-    if (!initialized) {
-      initialized = true;
-      import("@reown/appkit/react").then(({ createAppKit }) => {
-        import("../lib/wagmi-config").then(
-          ({ wagmiAdapter, networks, projectId }) => {
-            try {
-              createAppKit({
-                adapters: [wagmiAdapter as never],
-                networks,
-                projectId,
-                metadata: {
-                  name: "AZOX Gateway",
-                  description: "AZOX Gaming Hub",
-                  url: "https://azox-tap-earn.lovable.app",
-                  icons: ["/favicon.png"],
-                },
-                features: { analytics: false },
-              });
-            } catch {
-              // AppKit already initialized
-            }
-          }
-        );
-      });
-    }
-  }, []);
-  return null;
-}
 
 
 function NotFoundComponent() {
@@ -179,15 +160,10 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   return (
-    <WagmiProvider
-      config={
-        typeof window !== "undefined" ? wagmiAdapter.wagmiConfig : ssrFallbackConfig
-      }
-    >
+    <WalletProvider>
       <QueryClientProvider client={queryClient}>
         <AzoxProvider>
           <div className="min-h-screen bg-background text-foreground">
-            <AppKitInit />
             <BoxAlertBanner />
             <TopBar />
             <main className="mx-auto w-full max-w-md px-4 pb-28 pt-4">
@@ -199,6 +175,6 @@ function RootComponent() {
           </div>
         </AzoxProvider>
       </QueryClientProvider>
-    </WagmiProvider>
+    </WalletProvider>
   );
 }

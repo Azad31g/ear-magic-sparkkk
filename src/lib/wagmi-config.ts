@@ -1,7 +1,6 @@
 import { defineChain } from "viem";
-import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
+import { createConfig, http, type Config } from "wagmi";
 import type { AppKitNetwork } from "@reown/appkit/networks";
-import type { Config } from "wagmi";
 
 export const robinhoodTestnet = defineChain({
   id: 46630,
@@ -26,14 +25,22 @@ export const networks: [AppKitNetwork, ...AppKitNetwork[]] = [
   robinhoodTestnet,
 ];
 
-// Guard: only create WagmiAdapter on the client (browser),
-// never on the server during SSR
-const isClient = typeof window !== "undefined";
+// SSR-safe, read-only wagmi config. It contains no connectors and imports
+// nothing from @reown/appkit-adapter-wagmi (that package performs disallowed
+// operations in Cloudflare Workers global scope). The real AppKit adapter
+// config takes over in the browser via `appkit-runtime.tsx`.
+// Built lazily: the Workers runtime forbids I/O in module scope.
+let ssrConfig: Config | undefined;
 
-export const wagmiAdapter = isClient
-  ? new WagmiAdapter({ networks, projectId, ssr: true })
-  : (null as unknown as InstanceType<typeof WagmiAdapter>);
-
-export const wagmiConfig = isClient
-  ? wagmiAdapter.wagmiConfig
-  : ({} as Config);
+export function getSsrWagmiConfig(): Config {
+  if (!ssrConfig) {
+    ssrConfig = createConfig({
+      chains: [robinhoodTestnet],
+      transports: {
+        [robinhoodTestnet.id]: http(robinhoodTestnet.rpcUrls.default.http[0]),
+      },
+      ssr: true,
+    });
+  }
+  return ssrConfig;
+}
