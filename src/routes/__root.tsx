@@ -22,9 +22,6 @@ import { ClientOnly } from "@tanstack/react-router";
 import { getSsrWagmiConfig } from "../lib/wagmi-config";
 import { lazy, Suspense } from "react";
 
-function SsrWagmiProvider({ children }: { children: ReactNode }) {
-  return <WagmiProvider config={getSsrWagmiConfig()}>{children}</WagmiProvider>;
-}
 
 // Browser-only AppKit + WagmiAdapter provider (see appkit-runtime.tsx).
 // No silent fallback: if this chunk fails to load, the error must surface
