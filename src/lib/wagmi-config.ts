@@ -21,6 +21,16 @@ export const robinhoodTestnet = defineChain({
 // WalletConnect / Reown Project IDs are publishable client identifiers.
 export const projectId = "be9bcbf74fc2ea216bd558ee88a70feb";
 
+// Production origin used as AppKit/WalletConnect metadata.url. Wallets show
+// this to the user and validate it against the requesting origin — it must be
+// the deployed app, never a Lovable preview URL.
+export const APP_URL = "https://ear-magic-sparkkk.lovable.app";
+
+// Telegram Mini App link (https://t.me/<bot>/<app>). Used as the WalletConnect
+// return target so the wallet sends the user back into Telegram after
+// approving. Leave empty until the real bot link is known — never guess one.
+export const TELEGRAM_APP_URL = "";
+
 export const networks: [AppKitNetwork, ...AppKitNetwork[]] = [
   robinhoodTestnet,
 ];
