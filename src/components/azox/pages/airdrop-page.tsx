@@ -168,15 +168,63 @@ export function AirdropPage() {
   const isRegistered = Boolean(isEligible) || localRegistered;
   const busy = isTxPending || isConfirming;
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     resetTx();
-    writeContract({
+    setFlowError(null);
+
+    const params = {
       address: AZOX_AIRDROP_ADDRESS,
       abi: AZOX_AIRDROP_ABI,
       functionName: "register",
       value: REGISTRATION_FEE,
       chainId: robinhoodTestnet.id,
+    } as const;
+
+    console.info("[airdrop] register:start", {
+      account: address,
+      walletChainId: chainId,
+      targetChainId: robinhoodTestnet.id,
+      contract: AZOX_AIRDROP_ADDRESS,
+      valueWei: REGISTRATION_FEE.toString(),
+      balanceWei: balance?.value?.toString(),
     });
+
+    try {
+      // Fail loudly *before* asking the wallet: surfaces revert reasons
+      // ("Wrong fee", "Already registered", registration closed…) instead of
+      // a silent no-op.
+      const sim = await simulateContract(wagmiConfig, {
+        ...params,
+        account: address,
+      });
+      console.info("[airdrop] simulate:ok", sim.request);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("[airdrop] simulate:failed", err);
+      setFlowError(msg);
+      return;
+    }
+
+    try {
+      const hash = await writeContractAsync(params);
+      console.info("[airdrop] tx:submitted", hash);
+      const receipt = await waitForTransactionReceipt(wagmiConfig, {
+        hash,
+        chainId: robinhoodTestnet.id,
+      });
+      console.info("[airdrop] tx:receipt", {
+        status: receipt.status,
+        hash: receipt.transactionHash,
+        blockNumber: receipt.blockNumber.toString(),
+      });
+      if (receipt.status !== "success") {
+        setFlowError(`Transaction reverted (${receipt.transactionHash})`);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("[airdrop] tx:failed", err);
+      setFlowError(msg);
+    }
   };
 
   const displayAddress = address ?? savedAddress;
