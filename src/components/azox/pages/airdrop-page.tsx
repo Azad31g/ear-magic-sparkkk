@@ -556,7 +556,10 @@ export function AirdropPage() {
             </button>
 
             <button
-              onClick={() => void handleRegister(false)}
+              onClick={() => {
+                autoRegisterAttemptedRef.current = address ?? null;
+                void handleRegister(false);
+              }}
               disabled={!hasEnoughBalance || busy}
               className="w-full rounded-xl py-3 text-sm font-bold text-white disabled:cursor-not-allowed"
               style={{
@@ -568,12 +571,13 @@ export function AirdropPage() {
                   ? "⏳ Confirming on chain…"
                   : "⏳ Confirm in your wallet…"
                 : hasEnoughBalance
-                  ? `Register Now — ${FEE_LABEL}`
+                  ? `Retry Registration — ${FEE_LABEL}`
                   : "Insufficient Balance"}
             </button>
             <p className="text-center text-[11px] text-muted-foreground">
-              {FEE_LABEL} • One-time fee
+              Registration starts automatically • {FEE_LABEL} + gas
             </p>
+
 
             {(flowError || txError) && (
               <div className="space-y-1 text-center">
