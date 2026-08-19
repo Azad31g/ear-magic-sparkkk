@@ -294,6 +294,14 @@ export function AirdropPage() {
   const autoRegisterAttemptedRef = useRef<string | null>(null);
 
   useEffect(() => {
+    if (isConnected && address) {
+      console.info("[airdrop] wallet-connected", { address, chainId });
+    } else {
+      autoRegisterAttemptedRef.current = null;
+    }
+  }, [isConnected, address, chainId]);
+
+  useEffect(() => {
     if (!isConnected || !address) return;
     if (chainId !== robinhoodTestnet.id) {
       // Wrong chain: switch first, effect re-runs once chainId updates.
@@ -308,6 +316,7 @@ export function AirdropPage() {
     void handleRegister(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, address, chainId, isEligible, balance?.value]);
+
 
   // Never reuse a previous wallet's local registration state.
   useEffect(() => {
