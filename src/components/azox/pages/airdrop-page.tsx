@@ -475,11 +475,14 @@ export function AirdropPage() {
 
             <button
               onClick={() => disconnect()}
-              className="w-full rounded-xl py-2 text-xs font-semibold"
               style={{
+                width: "100%",
+                padding: "10px",
                 background: "none",
                 border: "1px solid #444",
+                borderRadius: 10,
                 color: "#888",
+                fontSize: 12,
                 cursor: "pointer",
               }}
             >
