@@ -10,6 +10,7 @@ import {
   useSwitchChain,
   useWaitForTransactionReceipt,
   useWriteContract,
+  useDisconnect,
 } from "wagmi";
 import { simulateContract, waitForTransactionReceipt } from "@wagmi/core";
 import { formatEther } from "viem";
@@ -98,6 +99,7 @@ function Confetti() {
 
 export function AirdropPage() {
   const { address, isConnected, chainId } = useAccount();
+  const { disconnect } = useDisconnect();
   const { switchChain, isPending: isSwitching } = useSwitchChain();
   const wagmiConfig = useConfig();
 
@@ -451,6 +453,20 @@ export function AirdropPage() {
                 </code>
               </div>
               <AppKitButton balance="hide" />
+              <button
+                onClick={() => disconnect()}
+                style={{
+                  background: "none",
+                  border: "1px solid #555",
+                  borderRadius: 8,
+                  color: "#888",
+                  padding: "4px 12px",
+                  fontSize: 11,
+                  cursor: "pointer",
+                }}
+              >
+                Disconnect
+              </button>
             </div>
 
             <p className="text-xs text-muted-foreground">
