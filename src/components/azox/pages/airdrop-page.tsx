@@ -545,7 +545,7 @@ export function AirdropPage() {
             </button>
 
             <button
-              onClick={handleRegister}
+              onClick={() => void handleRegister(false)}
               disabled={!hasEnoughBalance || busy}
               className="w-full rounded-xl py-3 text-sm font-bold text-white disabled:cursor-not-allowed"
               style={{
