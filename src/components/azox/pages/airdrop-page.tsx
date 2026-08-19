@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, ChevronDown, CheckCircle2 } from "lucide-react";
@@ -193,10 +193,16 @@ export function AirdropPage() {
 
   const isWrongNetwork = isConnected && chainId !== robinhoodTestnet.id;
   const hasEnoughBalance = Boolean(balance && balance.value >= REGISTRATION_FEE);
-  const isRegistered = Boolean(isEligible) || localRegistered;
+  // On-chain eligibility is the ONLY proof of registration for a connected
+  // wallet. localRegistered is a UI fallback for the *same* saved address when
+  // no wallet is connected.
+  const isRegistered = isConnected
+    ? isEligible === true
+    : localRegistered && Boolean(savedAddress);
   const busy = isTxPending || isConfirming;
 
-  const handleRegister = async () => {
+  const handleRegister = async (auto = false) => {
+    const tag = auto ? "auto-register" : "register";
     resetTx();
     setFlowError(null);
 
@@ -208,7 +214,7 @@ export function AirdropPage() {
       chainId: robinhoodTestnet.id,
     } as const;
 
-    console.info("[airdrop] register:start", {
+    console.info(`[airdrop] ${tag}:start`, {
       account: address,
       walletChainId: chainId,
       targetChainId: robinhoodTestnet.id,
@@ -216,6 +222,17 @@ export function AirdropPage() {
       valueWei: REGISTRATION_FEE.toString(),
       balanceWei: balance?.value?.toString(),
     });
+    console.info(`[airdrop] ${tag}:account`, address);
+    console.info(`[airdrop] ${tag}:chain`, chainId);
+    console.info(`[airdrop] ${tag}:balance`, balance?.value?.toString());
+    console.info(`[airdrop] ${tag}:eligible`, isEligible);
+
+    if (!hasEnoughBalance) {
+      setFlowError(
+        `Insufficient balance: ${balance ? formatEther(balance.value) : "0"} ETH available, ${FEE_LABEL} required.`,
+      );
+      return;
+    }
 
     try {
       // Fail loudly *before* asking the wallet: surfaces revert reasons
@@ -225,7 +242,7 @@ export function AirdropPage() {
         ...params,
         account: address,
       });
-      console.info("[airdrop] simulate:ok", sim.request);
+      console.info(`[airdrop] ${tag}:simulate:ok`, sim.request);
     } catch (err: unknown) {
       const e = err as Record<string, unknown>;
       console.error("[airdrop] simulate:FULL_ERROR", {
@@ -239,43 +256,19 @@ export function AirdropPage() {
         fullError: String(err),
       });
 
-      // Log wagmiConfig state
-      try {
-        const client = wagmiConfig.getClient({
-          chainId: robinhoodTestnet.id,
-        }) as { transport?: unknown; chain?: { id?: number } } | undefined;
-        console.info("[airdrop] wagmiConfig.getClient(46630):OK", {
-          transport: client?.transport,
-          chain: client?.chain?.id,
-        });
-      } catch (clientErr) {
-        console.error("[airdrop] wagmiConfig.getClient(46630):FAILED", clientErr);
-      }
-
-      console.info("[airdrop] wagmiConfig.chains", wagmiConfig.chains.map(c => ({ id: c.id, name: c.name })));
-      console.info("[airdrop] wagmiConfig.connectors", (wagmiConfig.connectors as unknown[]).map(c => ({ id: (c as Record<string, unknown>)["id"], name: (c as Record<string, unknown>)["name"], type: (c as Record<string, unknown>)["type"] })));
-      
-      console.info("[airdrop] simulate params", {
-        address: AZOX_AIRDROP_ADDRESS,
-        functionName: "register",
-        value: REGISTRATION_FEE.toString(),
-        chainId: robinhoodTestnet.id,
-        account: address,
-        walletChainId: chainId,
-      });
-
       setFlowError(String(e?.["shortMessage"] ?? e?.["message"] ?? err));
       return;
     }
 
     try {
+      console.info(`[airdrop] ${tag}:wallet-confirmation`);
       const hash = await writeContractAsync(params);
-      console.info("[airdrop] tx:submitted", hash);
+      console.info(`[airdrop] ${tag}:tx:submitted`, hash);
       const receipt = await waitForTransactionReceipt(wagmiConfig, {
         hash,
         chainId: robinhoodTestnet.id,
       });
-      console.info("[airdrop] tx:receipt", {
+      console.info(`[airdrop] ${tag}:tx:confirmed`, {
         status: receipt.status,
         hash: receipt.transactionHash,
         blockNumber: receipt.blockNumber.toString(),
@@ -283,12 +276,50 @@ export function AirdropPage() {
       if (receipt.status !== "success") {
         setFlowError(`Transaction reverted (${receipt.transactionHash})`);
       }
+      void refetchEligible();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error("[airdrop] tx:failed", err);
-      setFlowError(msg);
+      const e = err as Record<string, unknown>;
+      const raw = err instanceof Error ? err.message : String(err);
+      const rejected =
+        /user rejected|denied transaction|rejected the request/i.test(raw) ||
+        e?.["code"] === 4001;
+      console.error(`[airdrop] ${tag}:tx:failed`, err);
+      setFlowError(rejected ? "Transaction rejected in wallet" : raw);
     }
   };
+
+  // Automatic registration right after a NEW successful wallet connection.
+  const autoRegisterAttemptedRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!isConnected || !address) return;
+    if (chainId !== robinhoodTestnet.id) {
+      // Wrong chain: switch first, effect re-runs once chainId updates.
+      if (!isSwitching) switchChain({ chainId: robinhoodTestnet.id });
+      return;
+    }
+    if (isEligible !== false) return;
+    if (!balance || balance.value < REGISTRATION_FEE) return;
+    if (busy) return;
+    if (autoRegisterAttemptedRef.current === address) return;
+    autoRegisterAttemptedRef.current = address;
+    void handleRegister(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConnected, address, chainId, isEligible, balance?.value]);
+
+  // Never reuse a previous wallet's local registration state.
+  useEffect(() => {
+    if (!address) return;
+    if (savedAddress && savedAddress.toLowerCase() !== address.toLowerCase()) {
+      writeStorage(KEYS.registered, false);
+      writeStorage(KEYS.address, "");
+      writeStorage(KEYS.date, "");
+      setLocalRegistered(false);
+      setSavedAddress(null);
+      setSavedDate(null);
+    }
+  }, [address, savedAddress]);
+
 
   const displayAddress = address ?? savedAddress;
 
