@@ -8,13 +8,12 @@ import {
   useReadContract,
   useConfig,
   useSwitchChain,
-  useWaitForTransactionReceipt,
-  useWriteContract,
+  useSendTransaction,
   useDisconnect,
 } from "wagmi";
-import { simulateContract, waitForTransactionReceipt } from "@wagmi/core";
-import { formatEther } from "viem";
-import { readStorage, writeStorage } from "@/lib/points";
+import { waitForTransactionReceipt } from "@wagmi/core";
+import { encodeFunctionData, formatEther } from "viem";
+import { writeStorage } from "@/lib/points";
 import {
   AZOX_AIRDROP_ABI,
   AZOX_AIRDROP_ADDRESS,
@@ -46,6 +45,54 @@ function AppKitButton({ balance }: { balance?: "hide" }) {
 const ORANGE = "#FF7A18";
 const GREEN = "#a3e635";
 const FEE_LABEL = `${formatEther(REGISTRATION_FEE)} ETH`;
+const GAS_RESERVE = BigInt("100000000000000");
+const REQUIRED_BALANCE = REGISTRATION_FEE + GAS_RESERVE;
+
+const registerData = encodeFunctionData({
+  abi: AZOX_AIRDROP_ABI,
+  functionName: "register",
+  args: [],
+});
+
+type RegistrationErrorType =
+  | "USER_REJECTED"
+  | "INSUFFICIENT_FUNDS"
+  | "WRONG_NETWORK"
+  | "RPC_ERROR"
+  | "TRANSACTION_ERROR"
+  | "ELIGIBILITY_READ_ERROR";
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  return String(error);
+}
+
+function classifyTransactionError(error: unknown): RegistrationErrorType {
+  const message = getErrorMessage(error);
+  const code =
+    typeof error === "object" && error !== null && "code" in error
+      ? String(error.code)
+      : "";
+
+  if (
+    code === "4001" ||
+    /user rejected|user denied|denied transaction|rejected the request/i.test(
+      message,
+    )
+  ) {
+    return "USER_REJECTED";
+  }
+  if (/insufficient funds|exceeds balance|funds for gas/i.test(message)) {
+    return "INSUFFICIENT_FUNDS";
+  }
+  if (/wrong network|chain mismatch|chain not configured|unsupported chain/i.test(message)) {
+    return "WRONG_NETWORK";
+  }
+  if (/rpc|transport|network request|failed to fetch|timeout/i.test(message)) {
+    return "RPC_ERROR";
+  }
+  return "TRANSACTION_ERROR";
+}
 
 function shorten(addr: string) {
   return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
@@ -100,19 +147,13 @@ function Confetti() {
 export function AirdropPage() {
   const { address, isConnected, chainId } = useAccount();
   const { disconnect } = useDisconnect();
-  const { switchChain, isPending: isSwitching } = useSwitchChain();
+  const { switchChain, switchChainAsync, isPending: isSwitching } =
+    useSwitchChain();
   const wagmiConfig = useConfig();
 
   const [confetti, setConfetti] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
-  const [localRegistered, setLocalRegistered] = useState(false);
-  const [savedAddress, setSavedAddress] = useState<string | null>(null);
-  const [savedDate, setSavedDate] = useState<string | null>(null);
-  useEffect(() => {
-    setLocalRegistered(readStorage<boolean>(KEYS.registered, false));
-    setSavedAddress(readStorage<string | null>(KEYS.address, null));
-    setSavedDate(readStorage<string | null>(KEYS.date, null));
-  }, []);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   useEffect(() => {
     const handler = () => {
@@ -137,7 +178,7 @@ export function AirdropPage() {
     });
   }, [isConnected, address, chainId]);
 
-  const { data: balance } = useBalance({
+  const { data: balance, refetch: refetchBalance } = useBalance({
     address,
     chainId: robinhoodTestnet.id,
     query: { enabled: Boolean(address) },
@@ -160,206 +201,165 @@ export function AirdropPage() {
   });
 
   const {
-    writeContractAsync,
+    sendTransactionAsync,
     data: txHash,
     isPending: isTxPending,
     error: txError,
     reset: resetTx,
-  } = useWriteContract();
+  } = useSendTransaction();
 
   const [flowError, setFlowError] = useState<string | null>(null);
 
-  const { isLoading: isConfirming, isSuccess: isConfirmed } =
-    useWaitForTransactionReceipt({ hash: txHash });
-
-  useEffect(() => {
-    if (!isConfirmed) return;
-    const today = new Date().toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-    writeStorage(KEYS.registered, true);
-    writeStorage(KEYS.address, address ?? "");
-    writeStorage(KEYS.date, today);
-    setLocalRegistered(true);
-    setSavedAddress(address ?? null);
-    setSavedDate(today);
-    setConfetti(true);
-    void refetchEligible();
-    const t = setTimeout(() => setConfetti(false), 2200);
-    return () => clearTimeout(t);
-  }, [isConfirmed, address, refetchEligible]);
-
   const isWrongNetwork = isConnected && chainId !== robinhoodTestnet.id;
-  const hasEnoughBalance = Boolean(balance && balance.value >= REGISTRATION_FEE);
+  const hasEnoughBalance = Boolean(balance && balance.value >= REQUIRED_BALANCE);
   // On-chain eligibility is the ONLY proof of registration.
   const isRegistered = isEligible === true;
   const busy = isTxPending || isConfirming;
 
   const handleRegister = async (auto = false) => {
+    if (registrationInFlightRef.current) return;
+    registrationInFlightRef.current = true;
     resetTx();
     setFlowError(null);
-
-    const params = {
-      address: AZOX_AIRDROP_ADDRESS,
-      abi: AZOX_AIRDROP_ABI,
-      functionName: "register",
-      value: REGISTRATION_FEE,
-      chainId: robinhoodTestnet.id,
-    } as const;
-
-    console.info("[airdrop] auto-register:start", {
-      auto,
-      address,
-      chainId,
-      targetChainId: robinhoodTestnet.id,
-      contract: AZOX_AIRDROP_ADDRESS,
-      valueWei: REGISTRATION_FEE.toString(),
-      balanceWei: balance?.value?.toString(),
-      eligible: isEligible,
-    });
-
-    if (!hasEnoughBalance) {
-      setFlowError(
-        `Insufficient balance: ${balance ? formatEther(balance.value) : "0"} ETH available, ${FEE_LABEL} + gas required.`,
-      );
-      return;
-    }
-    console.info("[airdrop] auto-register:balance-ok", {
-      balanceWei: balance?.value?.toString(),
-    });
-
-
     try {
-      // Fail loudly *before* asking the wallet: surfaces revert reasons
-      // ("Wrong fee", "Already registered", registration closed…) instead of
-      // a silent no-op.
-      const sim = await simulateContract(wagmiConfig, {
-        ...params,
-        account: address,
-      });
-      console.info("[airdrop] auto-register:simulation-ok", sim.request);
-    } catch (err: unknown) {
-      const e = err as Record<string, unknown>;
-      console.error("[airdrop] auto-register:simulation-failed", {
-        name: e?.["name"],
-        shortMessage: e?.["shortMessage"],
-        message: e?.["message"],
-        details: e?.["details"],
-        cause: e?.["cause"],
-        metaMessages: e?.["metaMessages"],
-        code: e?.["code"],
-        fullError: String(err),
-      });
+      if (!isConnected || !address) {
+        throw new Error("Wallet is not connected");
+      }
 
-      setFlowError(String(e?.["shortMessage"] ?? e?.["message"] ?? err));
-      return;
-    }
+      console.info("[airdrop] CONNECTED", { address, chainId });
 
-    try {
-      console.info("[airdrop] auto-register:requesting-confirmation");
-      const hash = await writeContractAsync(params);
-      console.info("[airdrop] auto-register:tx-submitted", hash);
+      if (chainId !== robinhoodTestnet.id) {
+        try {
+          const switchedChain = await switchChainAsync({
+            chainId: robinhoodTestnet.id,
+          });
+          if (switchedChain.id !== robinhoodTestnet.id) {
+            throw new Error(
+              `Wrong network: expected chain ${robinhoodTestnet.id}, received ${switchedChain.id}`,
+            );
+          }
+        } catch (error) {
+          setFlowError(`WRONG_NETWORK: ${getErrorMessage(error)}`);
+          return;
+        }
+      }
+
+      const balanceResult = await refetchBalance();
+      if (balanceResult.error) {
+        setFlowError(`RPC_ERROR: ${getErrorMessage(balanceResult.error)}`);
+        return;
+      }
+      if (!balanceResult.data || balanceResult.data.value < REQUIRED_BALANCE) {
+        const available = balanceResult.data
+          ? formatEther(balanceResult.data.value)
+          : "0";
+        setFlowError(
+          `INSUFFICIENT_FUNDS: ${available} ETH available; ${FEE_LABEL} plus approximately ${formatEther(GAS_RESERVE)} ETH gas reserve required.`,
+        );
+        return;
+      }
+
+      console.info("[airdrop] CHECKING_ELIGIBILITY");
+      let eligibility;
+      try {
+        eligibility = await refetchEligible();
+      } catch (error) {
+        setFlowError(`ELIGIBILITY_READ_ERROR: ${getErrorMessage(error)}`);
+        return;
+      }
+      if (eligibility.error) {
+        setFlowError(
+          `ELIGIBILITY_READ_ERROR: ${getErrorMessage(eligibility.error)}`,
+        );
+        return;
+      }
+      console.info("[airdrop] ELIGIBILITY_RESULT", {
+        eligible: eligibility.data,
+      });
+      if (eligibility.data === true) return;
+      if (eligibility.data !== false) {
+        setFlowError(
+          "ELIGIBILITY_READ_ERROR: The eligibility check returned no result.",
+        );
+        return;
+      }
+
+      console.info("[airdrop] REQUESTING_TRANSACTION", {
+        from: address,
+        to: AZOX_AIRDROP_ADDRESS,
+        chainId: robinhoodTestnet.id,
+        valueWei: REGISTRATION_FEE.toString(),
+        valueEth: formatEther(REGISTRATION_FEE),
+      });
+      console.info("[airdrop] WALLET_CONFIRMATION_REQUESTED");
+      const hash = await sendTransactionAsync({
+        to: AZOX_AIRDROP_ADDRESS,
+        data: registerData,
+        value: REGISTRATION_FEE,
+        chainId: robinhoodTestnet.id,
+      });
+      autoRegisterAttemptedRef.current = address;
+      console.info("[airdrop] TRANSACTION_SUBMITTED", { hash });
+      console.info("[airdrop] WAITING_FOR_RECEIPT");
+      setIsConfirming(true);
       const receipt = await waitForTransactionReceipt(wagmiConfig, {
         hash,
         chainId: robinhoodTestnet.id,
       });
-      console.info("[airdrop] auto-register:tx-confirmed", {
+      console.info("[airdrop] TRANSACTION_CONFIRMED", {
+        hash,
         status: receipt.status,
-        hash: receipt.transactionHash,
-        blockNumber: receipt.blockNumber.toString(),
       });
       if (receipt.status !== "success") {
-        console.error(
-          "[airdrop] auto-register:transaction-failed",
-          receipt.transactionHash,
+        setFlowError(
+          `TRANSACTION_ERROR: Transaction reverted (${receipt.transactionHash})`,
         );
-        setFlowError(`Transaction reverted (${receipt.transactionHash})`);
         return;
       }
-      const verified = await refetchEligible();
-      console.info("[airdrop] auto-register:verified", verified.data);
-    } catch (err) {
-      const e = err as Record<string, unknown>;
-      const raw = err instanceof Error ? err.message : String(err);
-      const rejected =
-        /user rejected|denied transaction|rejected the request/i.test(raw) ||
-        e?.["code"] === 4001;
-      if (rejected) {
-        console.error("[airdrop] auto-register:transaction-rejected", err);
-        setFlowError("Transaction rejected");
-      } else {
-        console.error("[airdrop] auto-register:transaction-failed", err);
-        setFlowError(raw);
+
+      const verification = await refetchEligible();
+      if (verification.error) {
+        setFlowError(
+          `ELIGIBILITY_READ_ERROR: ${getErrorMessage(verification.error)}`,
+        );
+        return;
       }
+      if (verification.data !== true) {
+        setFlowError(
+          "TRANSACTION_ERROR: Transaction succeeded, but registration was not verified on-chain.",
+        );
+        return;
+      }
+      console.info("[airdrop] REGISTRATION_VERIFIED");
+      setConfetti(true);
+      setTimeout(() => setConfetti(false), 2200);
+    } catch (error) {
+      const type = classifyTransactionError(error);
+      setFlowError(`${type}: ${getErrorMessage(error)}`);
+      console.error(`[airdrop] ${type}`, error);
+    } finally {
+      setIsConfirming(false);
+      registrationInFlightRef.current = false;
     }
   };
 
 
-  // Automatic registration right after a NEW successful wallet connection.
+  // Automatic registration starts on the disconnected -> connected transition.
   const autoRegisterAttemptedRef = useRef<string | null>(null);
-  const wasConnectedRef = useRef(false);
-  const mountedRef = useRef(false);
-
-  // A wallet already connected at mount is a RESTORED session: never auto-charge it.
-  useEffect(() => {
-    if (mountedRef.current) return;
-    mountedRef.current = true;
-    if (isConnected) {
-      wasConnectedRef.current = true;
-      if (address) autoRegisterAttemptedRef.current = address;
-    }
-  }, [isConnected, address]);
+  const previousConnectionRef = useRef(false);
+  const registrationInFlightRef = useRef(false);
 
   useEffect(() => {
-    if (isConnected && address) {
-      console.info("[airdrop] wallet-connected", { address, chainId });
-    } else if (!isConnected) {
+    const wasConnected = previousConnectionRef.current;
+    previousConnectionRef.current = isConnected;
+
+    if (!isConnected) {
       autoRegisterAttemptedRef.current = null;
-      wasConnectedRef.current = false;
-    }
-  }, [isConnected, address, chainId]);
-
-  useEffect(() => {
-    if (!mountedRef.current) return;
-    if (!isConnected || !address) return;
-
-    // Only a NEW connection made during this page session may auto-register.
-    const isNewConnection = !wasConnectedRef.current;
-    wasConnectedRef.current = true;
-    if (!isNewConnection && autoRegisterAttemptedRef.current === address) return;
-
-    if (chainId !== robinhoodTestnet.id) {
-      // Wrong chain: switch first, effect re-runs once chainId updates.
-      if (!isSwitching) switchChain({ chainId: robinhoodTestnet.id });
       return;
     }
-    if (isEligible !== false) return;
-    if (!balance || balance.value < REGISTRATION_FEE) return;
-    if (busy) return;
-    if (autoRegisterAttemptedRef.current === address) return;
-    autoRegisterAttemptedRef.current = address;
-    void handleRegister(true);
+    if (!wasConnected && address) void handleRegister(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConnected, address, chainId, isEligible, balance?.value, busy]);
-
-
-  // Never reuse a previous wallet's local registration state.
-  useEffect(() => {
-    if (!address) return;
-    if (savedAddress && savedAddress.toLowerCase() !== address.toLowerCase()) {
-      writeStorage(KEYS.registered, false);
-      writeStorage(KEYS.address, "");
-      writeStorage(KEYS.date, "");
-      setLocalRegistered(false);
-      setSavedAddress(null);
-      setSavedDate(null);
-    }
-  }, [address, savedAddress]);
-
-
-  const displayAddress = address ?? savedAddress;
+  }, [isConnected, address]);
 
   return (
     <div className="flex flex-col gap-5 pb-8">
@@ -446,15 +446,10 @@ export function AirdropPage() {
             <h2 className="text-base font-bold" style={{ color: GREEN }}>
               Airdrop Eligible!
             </h2>
-            {displayAddress && (
+            {address && (
               <p className="text-xs text-muted-foreground">
                 Wallet:{" "}
-                <code className="text-foreground">{shorten(displayAddress)}</code>
-              </p>
-            )}
-            {savedDate && (
-              <p className="text-xs text-muted-foreground">
-                Registered on: {savedDate}
+                <code className="text-foreground">{shorten(address)}</code>
               </p>
             )}
             <p className="text-xs" style={{ color: GREEN }}>
@@ -466,9 +461,6 @@ export function AirdropPage() {
                 writeStorage(KEYS.registered, false);
                 writeStorage(KEYS.address, "");
                 writeStorage(KEYS.date, "");
-                setLocalRegistered(false);
-                setSavedAddress(null);
-                setSavedDate(null);
               }}
               style={{
                 marginTop: 12,
@@ -584,7 +576,6 @@ export function AirdropPage() {
 
             <button
               onClick={() => {
-                autoRegisterAttemptedRef.current = address ?? null;
                 void handleRegister(false);
               }}
               disabled={!hasEnoughBalance || busy}
