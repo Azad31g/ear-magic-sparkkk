@@ -453,20 +453,6 @@ export function AirdropPage() {
                 </code>
               </div>
               <AppKitButton balance="hide" />
-              <button
-                onClick={() => disconnect()}
-                style={{
-                  background: "none",
-                  border: "1px solid #555",
-                  borderRadius: 8,
-                  color: "#888",
-                  padding: "4px 12px",
-                  fontSize: 11,
-                  cursor: "pointer",
-                }}
-              >
-                Disconnect
-              </button>
             </div>
 
             <p className="text-xs text-muted-foreground">
@@ -486,6 +472,19 @@ export function AirdropPage() {
                 ⚠ Insufficient balance
               </p>
             )}
+
+            <button
+              onClick={() => disconnect()}
+              className="w-full rounded-xl py-2 text-xs font-semibold"
+              style={{
+                background: "none",
+                border: "1px solid #444",
+                color: "#888",
+                cursor: "pointer",
+              }}
+            >
+              🔌 Disconnect Wallet
+            </button>
 
             <button
               onClick={handleRegister}
