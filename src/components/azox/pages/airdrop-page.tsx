@@ -209,10 +209,10 @@ export function AirdropPage() {
       chainId: robinhoodTestnet.id,
     } as const;
 
-    console.info("[airdrop] auto-register-start", {
+    console.info("[airdrop] auto-register:start", {
       auto,
-      account: address,
-      walletChainId: chainId,
+      address,
+      chainId,
       targetChainId: robinhoodTestnet.id,
       contract: AZOX_AIRDROP_ADDRESS,
       valueWei: REGISTRATION_FEE.toString(),
@@ -226,6 +226,10 @@ export function AirdropPage() {
       );
       return;
     }
+    console.info("[airdrop] auto-register:balance-ok", {
+      balanceWei: balance?.value?.toString(),
+    });
+
 
     try {
       // Fail loudly *before* asking the wallet: surfaces revert reasons
