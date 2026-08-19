@@ -391,6 +391,30 @@ export function AirdropPage() {
             <p className="text-xs" style={{ color: GREEN }}>
               Registration confirmed on Robinhood Chain ✓
             </p>
+            <button
+              onClick={() => {
+                disconnect();
+                writeStorage(KEYS.registered, false);
+                writeStorage(KEYS.address, "");
+                writeStorage(KEYS.date, "");
+                setLocalRegistered(false);
+                setSavedAddress(null);
+                setSavedDate(null);
+              }}
+              style={{
+                marginTop: 12,
+                width: "100%",
+                padding: "10px",
+                background: "none",
+                border: "1px solid #444",
+                borderRadius: 10,
+                color: "#888",
+                fontSize: 12,
+                cursor: "pointer",
+              }}
+            >
+              🔌 Change Wallet
+            </button>
           </div>
         )}
 
