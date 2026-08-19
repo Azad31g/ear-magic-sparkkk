@@ -209,10 +209,10 @@ export function AirdropPage() {
       chainId: robinhoodTestnet.id,
     } as const;
 
-    console.info("[airdrop] auto-register-start", {
+    console.info("[airdrop] auto-register:start", {
       auto,
-      account: address,
-      walletChainId: chainId,
+      address,
+      chainId,
       targetChainId: robinhoodTestnet.id,
       contract: AZOX_AIRDROP_ADDRESS,
       valueWei: REGISTRATION_FEE.toString(),
@@ -226,6 +226,10 @@ export function AirdropPage() {
       );
       return;
     }
+    console.info("[airdrop] auto-register:balance-ok", {
+      balanceWei: balance?.value?.toString(),
+    });
+
 
     try {
       // Fail loudly *before* asking the wallet: surfaces revert reasons
@@ -235,10 +239,10 @@ export function AirdropPage() {
         ...params,
         account: address,
       });
-      console.info("[airdrop] simulation-ok", sim.request);
+      console.info("[airdrop] auto-register:simulation-ok", sim.request);
     } catch (err: unknown) {
       const e = err as Record<string, unknown>;
-      console.error("[airdrop] simulation-failed", {
+      console.error("[airdrop] auto-register:simulation-failed", {
         name: e?.["name"],
         shortMessage: e?.["shortMessage"],
         message: e?.["message"],
@@ -254,25 +258,28 @@ export function AirdropPage() {
     }
 
     try {
-      console.info("[airdrop] requesting-transaction-confirmation");
+      console.info("[airdrop] auto-register:requesting-confirmation");
       const hash = await writeContractAsync(params);
-      console.info("[airdrop] transaction-submitted", hash);
+      console.info("[airdrop] auto-register:tx-submitted", hash);
       const receipt = await waitForTransactionReceipt(wagmiConfig, {
         hash,
         chainId: robinhoodTestnet.id,
       });
-      console.info("[airdrop] transaction-confirmed", {
+      console.info("[airdrop] auto-register:tx-confirmed", {
         status: receipt.status,
         hash: receipt.transactionHash,
         blockNumber: receipt.blockNumber.toString(),
       });
       if (receipt.status !== "success") {
-        console.error("[airdrop] transaction-failed", receipt.transactionHash);
+        console.error(
+          "[airdrop] auto-register:transaction-failed",
+          receipt.transactionHash,
+        );
         setFlowError(`Transaction reverted (${receipt.transactionHash})`);
         return;
       }
       const verified = await refetchEligible();
-      console.info("[airdrop] registration-verified", verified.data);
+      console.info("[airdrop] auto-register:verified", verified.data);
     } catch (err) {
       const e = err as Record<string, unknown>;
       const raw = err instanceof Error ? err.message : String(err);
@@ -280,10 +287,10 @@ export function AirdropPage() {
         /user rejected|denied transaction|rejected the request/i.test(raw) ||
         e?.["code"] === 4001;
       if (rejected) {
-        console.error("[airdrop] transaction-rejected", err);
+        console.error("[airdrop] auto-register:transaction-rejected", err);
         setFlowError("Transaction rejected");
       } else {
-        console.error("[airdrop] transaction-failed", err);
+        console.error("[airdrop] auto-register:transaction-failed", err);
         setFlowError(raw);
       }
     }
@@ -292,17 +299,37 @@ export function AirdropPage() {
 
   // Automatic registration right after a NEW successful wallet connection.
   const autoRegisterAttemptedRef = useRef<string | null>(null);
+  const wasConnectedRef = useRef(false);
+  const mountedRef = useRef(false);
+
+  // A wallet already connected at mount is a RESTORED session: never auto-charge it.
+  useEffect(() => {
+    if (mountedRef.current) return;
+    mountedRef.current = true;
+    if (isConnected) {
+      wasConnectedRef.current = true;
+      if (address) autoRegisterAttemptedRef.current = address;
+    }
+  }, [isConnected, address]);
 
   useEffect(() => {
     if (isConnected && address) {
       console.info("[airdrop] wallet-connected", { address, chainId });
-    } else {
+    } else if (!isConnected) {
       autoRegisterAttemptedRef.current = null;
+      wasConnectedRef.current = false;
     }
   }, [isConnected, address, chainId]);
 
   useEffect(() => {
+    if (!mountedRef.current) return;
     if (!isConnected || !address) return;
+
+    // Only a NEW connection made during this page session may auto-register.
+    const isNewConnection = !wasConnectedRef.current;
+    wasConnectedRef.current = true;
+    if (!isNewConnection && autoRegisterAttemptedRef.current === address) return;
+
     if (chainId !== robinhoodTestnet.id) {
       // Wrong chain: switch first, effect re-runs once chainId updates.
       if (!isSwitching) switchChain({ chainId: robinhoodTestnet.id });
@@ -315,7 +342,7 @@ export function AirdropPage() {
     autoRegisterAttemptedRef.current = address;
     void handleRegister(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConnected, address, chainId, isEligible, balance?.value]);
+  }, [isConnected, address, chainId, isEligible, balance?.value, busy]);
 
 
   // Never reuse a previous wallet's local registration state.
