@@ -7,7 +7,6 @@ const STREAK_KEY = "azox_daily_streak";
 type GameTasksState = {
   tasksDone: number;
   completedOnce: string[];
-  worldBestScores: Record<string, number>;
 };
 
 type StreakState = {
@@ -19,10 +18,6 @@ function loadState(): GameTasksState {
   return {
     tasksDone: typeof raw?.tasksDone === "number" ? raw.tasksDone : 0,
     completedOnce: Array.isArray(raw?.completedOnce) ? raw.completedOnce : [],
-    worldBestScores:
-      raw?.worldBestScores && typeof raw.worldBestScores === "object"
-        ? raw.worldBestScores
-        : {},
   };
 }
 
@@ -73,12 +68,10 @@ export function useGameTasks() {
     return 1;
   }, []);
 
-  // Shoot / Snake / TakBom — +10 Tasks on new WORLD best score
+  // Shoot / Snake / TakBom — +10 Tasks on new best score (game validates the record)
   const onNewGlobalBest = useCallback((gameId: string, newScore: number) => {
+    if (newScore <= 0) return 0;
     const state = loadState();
-    const currentWorldBest = state.worldBestScores[gameId] ?? 0;
-    if (newScore <= currentWorldBest) return 0;
-    state.worldBestScores[gameId] = newScore;
     state.tasksDone += 10;
     saveState(state);
     return 10;
@@ -121,10 +114,6 @@ export function useGameTasks() {
   }, []);
 
   const getGameTasksDone = useCallback(() => loadState().tasksDone, []);
-  const getGlobalBest = useCallback(
-    (gameId: string) => loadState().worldBestScores[gameId] ?? 0,
-    [],
-  );
   const getStreak = useCallback(
     () => readStorage<StreakState>(STREAK_KEY, { dates: [] }).dates.length,
     [],
@@ -138,7 +127,6 @@ export function useGameTasks() {
     onNewGlobalBest,
     onDailyGiftClaimed,
     getGameTasksDone,
-    getGlobalBest,
     getStreak,
   };
 }
