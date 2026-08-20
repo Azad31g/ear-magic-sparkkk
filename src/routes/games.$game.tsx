@@ -8,6 +8,7 @@ import AzoxWord from "@/components/azox/games/VideoAds";
 import AzoxBox from "@/components/azox/games/AzoxBox";
 import ClickerFrenzy from "@/components/azox/games/ClickerFrenzy";
 import GlobalButton from "@/components/azox/games/GlobalButton";
+import QuestionDay from "@/components/azox/games/QuestionDay";
 import ShootGame from "@/components/azox/games/ShootGame";
 import SnakeGame from "@/components/azox/games/SnakeGame";
 import TakBomGame from "@/components/azox/games/TakBom";
@@ -66,6 +67,9 @@ function GameRoute() {
   }
   if (game === "video-ads") {
     return <AzoxWord />;
+  }
+  if (game === "question-day") {
+    return <QuestionDay />;
   }
   if (game === "clicker") {
     return <ClickerFrenzy />;
