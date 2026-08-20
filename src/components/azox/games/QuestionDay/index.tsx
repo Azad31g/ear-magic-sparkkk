@@ -83,7 +83,7 @@ export default function QuestionDay() {
   const [timeLeft, setTimeLeft] = useState(SECONDS_PER_QUESTION);
   const [done, setDone] = useState(false);
 
-  const current = SAMPLE_QUESTIONS[index];
+  const current = SAMPLE_QUESTIONS[index] ?? SAMPLE_QUESTIONS[0]!;
 
   const next = useCallback(() => {
     setPicked(null);
