@@ -27,6 +27,7 @@ export function FallingObject({
       style={{
         left: `${obj.x}%`,
         top: 0,
+        position: "absolute",
         width: obj.size + PAD * 2,
         height: obj.size + PAD * 2,
         padding: PAD,
@@ -37,6 +38,7 @@ export function FallingObject({
         pointerEvents: "all",
         animation: `takbom-fall ${obj.duration}s linear forwards`,
         willChange: "transform",
+        contain: "layout style",
       }}
     >
       {obj.kind === "star" ? (
@@ -46,7 +48,7 @@ export function FallingObject({
             width: "100%",
             height: "100%",
             pointerEvents: "none",
-            filter: "drop-shadow(0 0 3px #4db820)",
+            filter: "drop-shadow(0 0 2px rgba(74,158,26,0.5))",
           }}
         >
           <svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true">
@@ -55,6 +57,7 @@ export function FallingObject({
               strokeWidth="12"
               strokeLinecap="round"
               shapeRendering="crispEdges"
+              opacity="0.7"
             >
               <line x1="50" y1="8" x2="50" y2="92" />
               <line x1="8" y1="50" x2="92" y2="50" />
@@ -67,11 +70,11 @@ export function FallingObject({
               <line x1="20" y1="20" x2="80" y2="80" />
               <line x1="80" y1="20" x2="20" y2="80" />
             </g>
-            <g stroke="#6bc934" strokeWidth="4" strokeLinecap="round">
+            <g stroke="#5aaa28" strokeWidth="4" strokeLinecap="round">
               <line x1="50" y1="24" x2="50" y2="76" />
               <line x1="24" y1="50" x2="76" y2="50" />
             </g>
-            <circle cx="50" cy="50" r="10" fill="#6bc934" />
+            <circle cx="50" cy="50" r="10" fill="#4a9e1a" />
           </svg>
         </span>
       ) : (
