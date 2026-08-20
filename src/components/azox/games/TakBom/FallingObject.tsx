@@ -30,8 +30,7 @@ export function FallingObject({
 
     // Calculate speed inside effect so window.innerHeight is correct
     const screenHeight = window.innerHeight || 800;
-    const speed = screenHeight / obj.duration;
-
+    const speed = (screenHeight / obj.duration) * 1.35;
 
     const tick = (now: number) => {
       if (doneRef.current) return;
