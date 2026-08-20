@@ -95,7 +95,7 @@ export function useTakBomLogic(onGameOver?: (score: number) => void) {
       setObjects((prev) => {
         if (prev.length >= MAX_OBJECTS) return prev;
         const now = Date.now();
-        const bombDue = now - lastBombRef.current > rand(5000, 7000);
+        const bombDue = now - lastBombRef.current > rand(2000, 3000);
         if (bombDue) lastBombRef.current = now;
         const maxFall = Math.max(4.5, 7 - tier * 0.5);
         const make = (kind: "star" | "bomb"): FallingObj => ({
@@ -108,8 +108,9 @@ export function useTakBomLogic(onGameOver?: (score: number) => void) {
         });
         const next = [...prev, make(bombDue ? "bomb" : "star")];
         // sometimes spawn a second object for higher density
-        if (Math.random() < 0.5 && next.length < MAX_OBJECTS) {
-          next.push(make("star"));
+        if (Math.random() < 0.6 && next.length < MAX_OBJECTS) {
+          const secondKind = Math.random() < 0.35 ? "bomb" : "star";
+          next.push(make(secondKind));
         }
         return next;
       });
@@ -124,7 +125,8 @@ export function useTakBomLogic(onGameOver?: (score: number) => void) {
   const tapObject = useCallback(
     (obj: FallingObj) => {
       if (state !== "playing") return;
-      removeObject(obj.id);
+      // Remove immediately — do not wait for animation
+      setObjects((prev) => prev.filter((o) => o.id !== obj.id));
       if (obj.kind === "bomb") {
         setScore(0);
         setBoomAt(Date.now());
@@ -132,7 +134,7 @@ export function useTakBomLogic(onGameOver?: (score: number) => void) {
         setScore((s) => s + STAR_POINTS);
       }
     },
-    [state, removeObject],
+    [state],
   );
 
   return {
