@@ -53,14 +53,16 @@ export default function TakBomGame() {
         <div className="relative flex-1 overflow-hidden">
           <GameGrid />
 
-          {game.objects.map((obj) => (
-            <FallingObject
-              key={obj.id}
-              obj={obj}
-              onTap={game.tapObject}
-              onDone={game.removeObject}
-            />
-          ))}
+          <div className="absolute inset-0" style={{ zIndex: 10, pointerEvents: "none" }}>
+            {game.objects.map((obj) => (
+              <FallingObject
+                key={obj.id}
+                obj={obj}
+                onTap={game.tapObject}
+                onDone={game.removeObject}
+              />
+            ))}
+          </div>
 
           {flash ? (
             <div className="pointer-events-none absolute inset-0 z-30 bg-yellow-400/30" />

@@ -87,8 +87,10 @@ export function FallingObject({
         cursor: "pointer",
         display: "grid",
         placeItems: "center",
+        zIndex: 10,
+        overflow: "visible",
         willChange: "transform",
-        transform: `translate3d(0, ${-obj.size - PAD * 2}px, 0)`,
+        transform: `translate3d(0, -150px, 0)`,
       }}
     >
       {obj.kind === "star" ? (
