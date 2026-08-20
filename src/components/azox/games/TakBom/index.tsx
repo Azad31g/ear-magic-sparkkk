@@ -11,8 +11,10 @@ import { useTakBomLogic } from "./useTakBomLogic";
 
 export default function TakBomGame() {
   const { addPoints } = useAzox();
+  const finalScoreRef = useRef(0);
   const game = useTakBomLogic((score) => {
     if (score > 0) addPoints(score);
+    finalScoreRef.current = score;
   });
 
   const { onNewGlobalBest } = useGameTasks();
@@ -25,7 +27,7 @@ export default function TakBomGame() {
     }
     if (overFiredRef.current) return;
     overFiredRef.current = true;
-    const earnedTasks = onNewGlobalBest("takbom", game.score);
+    const earnedTasks = onNewGlobalBest("takbom", finalScoreRef.current);
     if (earnedTasks > 0) toast.success("+10 Tasks earned! 🏆 New Global Best!");
   }, [game.state, game.score, onNewGlobalBest]);
 
