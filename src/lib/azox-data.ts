@@ -393,3 +393,13 @@ export const LEADERBOARD: Record<RankKey, LeaderboardUser[]> = {
 export function formatPoints(n: number): string {
   return n.toLocaleString("en-US");
 }
+
+export const GAME_TASK_RULES = {
+  WORD_COMPLETE:      "game-word-complete",
+  BOX_OPEN:           "game-box-open",
+  QUESTION_COMPLETE:  "game-question-complete",
+  GLOBAL_BUTTON_WIN:  "game-global-button-win",
+  SHOOT_GLOBAL_BEST:  "game-shoot-best",
+  SNAKE_GLOBAL_BEST:  "game-snake-best",
+  TAKBOM_GLOBAL_BEST: "game-takbom-best",
+} as const;
