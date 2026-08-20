@@ -19,23 +19,26 @@ export function FallingObject({
   const lastTimeRef = useRef(0);
   const doneRef = useRef(false);
 
-  // pixels per second — faster objects fall quicker
-  const speed = (110 / obj.duration) * (window.innerHeight / 100);
-
   useEffect(() => {
     const el = elRef.current;
     if (!el) return;
 
+    // Calculate speed inside effect so window.innerHeight is correct
+    const screenHeight = window.innerHeight || 800;
+    const speed = screenHeight / obj.duration;
+
     const tick = (now: number) => {
       if (doneRef.current) return;
 
-      const dt = lastTimeRef.current ? (now - lastTimeRef.current) / 1000 : 0;
+      const dt = lastTimeRef.current
+        ? (now - lastTimeRef.current) / 1000
+        : 0.016;
       lastTimeRef.current = now;
 
       yRef.current += speed * dt;
       el.style.transform = `translate3d(0, ${yRef.current}px, 0)`;
 
-      if (yRef.current > window.innerHeight + obj.size) {
+      if (yRef.current > screenHeight + obj.size + PAD * 2) {
         doneRef.current = true;
         onDone(obj.id);
         return;
