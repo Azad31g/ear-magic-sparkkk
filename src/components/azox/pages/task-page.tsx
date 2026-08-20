@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Gift,
   Send,
@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { useAzox } from "@/components/azox/app-provider";
+import { useGameTasks } from "@/hooks/useGameTasks";
 import { verifyTelegramMembership } from "@/lib/telegram-verify.functions";
 import {
   SOCIAL_TASKS,
@@ -160,6 +161,22 @@ function TaskGroup({ group }: { group: SocialTaskGroup }) {
 
 export function TaskPage() {
   const { dailyClaimed, claimDaily } = useAzox();
+  const { onDailyGiftClaimed, getGameTasksDone, getStreak } = useGameTasks();
+  const [gameTasksDone, setGameTasksDone] = useState(0);
+  const [streak, setStreak] = useState(0);
+
+  useEffect(() => {
+    setGameTasksDone(getGameTasksDone());
+    setStreak(getStreak());
+  }, [getGameTasksDone, getStreak]);
+
+  const handleClaimDaily = () => {
+    claimDaily();
+    const earned = onDailyGiftClaimed();
+    if (earned > 0) toast.success("🔥 5-Day Streak! +3 Tasks earned!");
+    setGameTasksDone(getGameTasksDone());
+    setStreak(getStreak());
+  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -185,9 +202,14 @@ export function TaskPage() {
           <p className="text-xs text-muted-foreground">
             +200 points for logging in today
           </p>
+          <p className="text-xs font-semibold text-gold">
+            {streak === 0
+              ? "Start your streak! Claim daily for 5 days"
+              : `Day ${streak}/5 streak 🔥`}
+          </p>
         </div>
         <Button
-          onClick={claimDaily}
+          onClick={handleClaimDaily}
           disabled={dailyClaimed}
           className={cn(
             "rounded-xl font-semibold",
@@ -198,6 +220,19 @@ export function TaskPage() {
         >
           {dailyClaimed ? "Claimed" : "Claim +200"}
         </Button>
+      </section>
+
+      {/* Game tasks summary */}
+      <section className="glass flex items-center gap-3 rounded-2xl border border-primary/40 p-4">
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-bold">🎮 Game Tasks</p>
+          <p className="text-xs text-muted-foreground">
+            Earned from in-game achievements
+          </p>
+        </div>
+        <span className="text-2xl font-black tabular-nums text-primary">
+          {gameTasksDone}
+        </span>
       </section>
 
       {/* Social tasks */}

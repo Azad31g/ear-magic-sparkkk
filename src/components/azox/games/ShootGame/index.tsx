@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { toast } from "sonner";
+import { useGameTasks } from "@/hooks/useGameTasks";
 import { readStorage, writeStorage } from "@/lib/points";
 import { initTelegram } from "@/lib/telegram";
 import { GameCanvas } from "./GameCanvas";
@@ -12,6 +14,7 @@ export default function ShootGame({
 }: {
   onGameOver?: (score: number) => void;
 }) {
+  const { onNewGlobalBest } = useGameTasks();
   const gameRef = useRef<Game | null>(null);
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
@@ -68,6 +71,10 @@ export default function ShootGame({
             setBest(p.finalScore);
           }
           setOver({ ...p, newRecord });
+          const earnedTasks = onNewGlobalBest("shoot", p.finalScore);
+          if (earnedTasks > 0) {
+            toast.success("+10 Tasks earned! 🏆 New Global Best!");
+          }
           onGameOver?.(p.finalScore);
           try {
             window.parent?.postMessage(

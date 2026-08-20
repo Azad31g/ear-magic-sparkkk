@@ -1,5 +1,8 @@
+import { useEffect, useRef } from "react";
 import { Link } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { useAzox } from "@/components/azox/app-provider";
+import { useGameTasks } from "@/hooks/useGameTasks";
 import { GameBoard } from "./GameBoard";
 import { GameHeader } from "./GameHeader";
 import Joystick from "./Joystick";
@@ -11,6 +14,20 @@ export default function SnakeGame() {
   const game = useSnakeLogic((score) => {
     if (score > 0) addPoints(score);
   });
+
+  const { onNewGlobalBest } = useGameTasks();
+  const overFiredRef = useRef(false);
+
+  useEffect(() => {
+    if (game.state !== "over") {
+      overFiredRef.current = false;
+      return;
+    }
+    if (overFiredRef.current) return;
+    overFiredRef.current = true;
+    const earnedTasks = onNewGlobalBest("snake", game.score);
+    if (earnedTasks > 0) toast.success("+10 Tasks earned! 🏆 New Global Best!");
+  }, [game.state, game.score, onNewGlobalBest]);
 
   return (
     <div

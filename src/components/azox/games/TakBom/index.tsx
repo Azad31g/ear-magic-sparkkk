@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { useAzox } from "@/components/azox/app-provider";
+import { useGameTasks } from "@/hooks/useGameTasks";
 import { FallingObject } from "./FallingObject";
 import { GameGrid } from "./GameGrid";
 import { GameHeader } from "./GameHeader";
@@ -12,6 +14,20 @@ export default function TakBomGame() {
   const game = useTakBomLogic((score) => {
     if (score > 0) addPoints(score);
   });
+
+  const { onNewGlobalBest } = useGameTasks();
+  const overFiredRef = useRef(false);
+
+  useEffect(() => {
+    if (game.state !== "over") {
+      overFiredRef.current = false;
+      return;
+    }
+    if (overFiredRef.current) return;
+    overFiredRef.current = true;
+    const earnedTasks = onNewGlobalBest("takbom", game.score);
+    if (earnedTasks > 0) toast.success("+10 Tasks earned! 🏆 New Global Best!");
+  }, [game.state, game.score, onNewGlobalBest]);
 
   const [flash, setFlash] = useState(false);
   useEffect(() => {

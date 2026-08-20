@@ -1,6 +1,9 @@
+import { useEffect, useRef } from "react";
 import { Link } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { ArrowLeft, Coins, Lightbulb, Trophy } from "lucide-react";
 import { useAzox } from "@/components/azox/app-provider";
+import { useGameTasks } from "@/hooks/useGameTasks";
 import { formatPoints } from "@/lib/azox-data";
 import AnswerSlots from "./AnswerSlots";
 import WordTiles from "./WordTiles";
@@ -19,6 +22,15 @@ const DIFF_LABEL = { easy: "🟢 Easy", medium: "🟡 Medium", hard: "🔴 Hard"
 export default function AzoxWord() {
   const { points: accountPoints } = useAzox();
   const g = useAzoxWord();
+  const { onWordComplete } = useGameTasks();
+  const wordTaskFiredRef = useRef(false);
+
+  useEffect(() => {
+    if (g.phase !== "complete" || wordTaskFiredRef.current) return;
+    wordTaskFiredRef.current = true;
+    const earned = onWordComplete(g.correctCount === WORDS_PER_DAY);
+    if (earned > 0) toast.success("+2 Tasks earned! 🔤");
+  }, [g.phase, g.correctCount, onWordComplete]);
 
   return (
     <div className="flex flex-col gap-5">
