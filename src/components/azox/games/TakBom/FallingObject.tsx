@@ -23,9 +23,15 @@ export function FallingObject({
     const el = elRef.current;
     if (!el) return;
 
+    // reset per-mount state (StrictMode remounts effects)
+    doneRef.current = false;
+    lastTimeRef.current = 0;
+    yRef.current = -obj.size - PAD * 2;
+
     // Calculate speed inside effect so window.innerHeight is correct
     const screenHeight = window.innerHeight || 800;
     const speed = screenHeight / obj.duration;
+
 
     const tick = (now: number) => {
       if (doneRef.current) return;
