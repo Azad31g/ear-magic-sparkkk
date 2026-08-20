@@ -95,7 +95,7 @@ export function useTakBomLogic(onGameOver?: (score: number) => void) {
       setObjects((prev) => {
         if (prev.length >= MAX_OBJECTS) return prev;
         const now = Date.now();
-        const bombDue = now - lastBombRef.current > rand(15000, 20000);
+        const bombDue = now - lastBombRef.current > rand(5000, 7000);
         if (bombDue) lastBombRef.current = now;
         const maxFall = Math.max(4.5, 7 - tier * 0.5);
         const make = (kind: "star" | "bomb"): FallingObj => ({

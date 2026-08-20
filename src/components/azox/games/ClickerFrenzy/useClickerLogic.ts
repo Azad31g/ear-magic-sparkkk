@@ -3,8 +3,8 @@ import { useAzox } from "@/components/azox/app-provider";
 import { haptic } from "@/lib/telegram";
 
 export const ROUND_MS = 30 * 1000;
-export const POINTS_PER_TAP = 12;
-const COOLDOWN_MS = 60 * 60 * 1000;
+export const POINTS_PER_TAP = 8;
+const COOLDOWN_MS = 4 * 60 * 60 * 1000;
 
 const K = {
   lastPlayed: "clickerFrenzy_lastPlayed",

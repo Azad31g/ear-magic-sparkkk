@@ -19,9 +19,9 @@ export const TAKBOM_BEST_KEY = "azox:takbom:best:v1";
 export const STAR_POINTS = 1;
 
 export const TAKBOM_COLORS = {
-  base: "#61D120",
-  bright: "#8AFF32",
-  glow: "#39FF14",
+  base: "#4a9e1a",
+  bright: "#6bc934",
+  glow: "#4db820",
   dark: "#2E8B10",
   background: "#000000",
   grid: "#0A3A0A",
