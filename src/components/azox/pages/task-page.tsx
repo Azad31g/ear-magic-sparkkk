@@ -219,19 +219,6 @@ export function TaskPage() {
         </Button>
       </section>
 
-      {/* Game tasks summary */}
-      <section className="glass flex items-center gap-3 rounded-2xl border border-primary/40 p-4">
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold">🎮 Game Tasks</p>
-          <p className="text-xs text-muted-foreground">
-            Earned from in-game achievements
-          </p>
-        </div>
-        <span className="text-2xl font-black tabular-nums text-primary">
-          {gameTasksDone}
-        </span>
-      </section>
-
       {/* Social tasks */}
       {SOCIAL_TASKS.map((group) => (
         <TaskGroup key={group.platform} group={group} />
