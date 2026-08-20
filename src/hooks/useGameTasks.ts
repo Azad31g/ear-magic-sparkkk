@@ -15,11 +15,15 @@ type StreakState = {
 };
 
 function loadState(): GameTasksState {
-  return readStorage<GameTasksState>(STORAGE_KEY, {
-    tasksDone: 0,
-    completedOnce: [],
-    worldBestScores: {},
-  });
+  const raw = readStorage<Partial<GameTasksState>>(STORAGE_KEY, {});
+  return {
+    tasksDone: typeof raw?.tasksDone === "number" ? raw.tasksDone : 0,
+    completedOnce: Array.isArray(raw?.completedOnce) ? raw.completedOnce : [],
+    worldBestScores:
+      raw?.worldBestScores && typeof raw.worldBestScores === "object"
+        ? raw.worldBestScores
+        : {},
+  };
 }
 
 function saveState(s: GameTasksState) {
