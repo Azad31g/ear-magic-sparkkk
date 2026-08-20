@@ -1,6 +1,8 @@
+import { useEffect, useRef } from "react";
+
 import type { FallingObj } from "./types";
 
-const PAD = 10;
+const PAD = 16;
 
 export function FallingObject({
   obj,
@@ -11,23 +13,64 @@ export function FallingObject({
   onTap: (obj: FallingObj) => void;
   onDone: (id: number) => void;
 }) {
-  const handle = (e: React.PointerEvent) => {
+  const elRef = useRef<HTMLButtonElement>(null);
+  const yRef = useRef(-obj.size - PAD * 2);
+  const rafRef = useRef(0);
+  const lastTimeRef = useRef(0);
+  const doneRef = useRef(false);
+
+  // pixels per second — faster objects fall quicker
+  const speed = (110 / obj.duration) * (window.innerHeight / 100);
+
+  useEffect(() => {
+    const el = elRef.current;
+    if (!el) return;
+
+    const tick = (now: number) => {
+      if (doneRef.current) return;
+
+      const dt = lastTimeRef.current ? (now - lastTimeRef.current) / 1000 : 0;
+      lastTimeRef.current = now;
+
+      yRef.current += speed * dt;
+      el.style.transform = `translate3d(0, ${yRef.current}px, 0)`;
+
+      if (yRef.current > window.innerHeight + obj.size) {
+        doneRef.current = true;
+        onDone(obj.id);
+        return;
+      }
+
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      doneRef.current = true;
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, []); // empty deps — runs once on mount only
+
+  const handlePointerDown = (e: React.PointerEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (doneRef.current) return;
+    doneRef.current = true;
+    cancelAnimationFrame(rafRef.current);
     onTap(obj);
   };
 
   return (
     <button
+      ref={elRef}
       type="button"
-      onPointerDown={handle}
-      onAnimationEnd={() => onDone(obj.id)}
+      onPointerDown={handlePointerDown}
       aria-label={obj.kind === "bomb" ? "Bomb" : "Star"}
-      className="absolute grid place-items-center"
       style={{
+        position: "absolute",
         left: `${obj.x}%`,
         top: 0,
-        position: "absolute",
         width: obj.size + PAD * 2,
         height: obj.size + PAD * 2,
         padding: PAD,
@@ -36,31 +79,20 @@ export function FallingObject({
         userSelect: "none",
         WebkitUserSelect: "none",
         pointerEvents: "all",
-        animation: `takbom-fall ${obj.duration}s linear`,
-        animationFillMode: "forwards",
-        animationPlayState: "running",
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+        display: "grid",
+        placeItems: "center",
         willChange: "transform",
-        contain: "layout style",
+        transform: `translate3d(0, ${-obj.size - PAD * 2}px, 0)`,
       }}
     >
       {obj.kind === "star" ? (
-        <span
-          className="block"
-          style={{
-            width: "100%",
-            height: "100%",
-            pointerEvents: "none",
-            filter: "drop-shadow(0 0 2px rgba(74,158,26,0.5))",
-          }}
-        >
-          <svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true">
-            <g
-              stroke="#2E8B10"
-              strokeWidth="12"
-              strokeLinecap="round"
-              shapeRendering="crispEdges"
-              opacity="0.7"
-            >
+        <span style={{ width: "100%", height: "100%", pointerEvents: "none",
+          filter: "drop-shadow(0 0 2px rgba(74,158,26,0.5))" }}>
+          <svg viewBox="0 0 100 100" width="100%" height="100%">
+            <g stroke="#2E8B10" strokeWidth="12" strokeLinecap="round" opacity="0.7">
               <line x1="50" y1="8" x2="50" y2="92" />
               <line x1="8" y1="50" x2="92" y2="50" />
               <line x1="20" y1="20" x2="80" y2="80" />
@@ -72,27 +104,16 @@ export function FallingObject({
               <line x1="20" y1="20" x2="80" y2="80" />
               <line x1="80" y1="20" x2="20" y2="80" />
             </g>
-            <g stroke="#5aaa28" strokeWidth="4" strokeLinecap="round">
-              <line x1="50" y1="24" x2="50" y2="76" />
-              <line x1="24" y1="50" x2="76" y2="50" />
-            </g>
             <circle cx="50" cy="50" r="10" fill="#4a9e1a" />
           </svg>
         </span>
       ) : (
-        <span
-          className="grid place-items-center rounded-full animate-pulse"
-          style={{
-            width: "100%",
-            height: "100%",
-            pointerEvents: "none",
-            background: "radial-gradient(circle at 35% 30%, #fde047, #ca8a04)",
-            boxShadow: "0 0 14px #facc15, 0 0 28px rgba(250,204,21,0.6)",
-            border: "2px solid #fef08a",
-            fontSize: `${Math.round(obj.size * 0.5)}px`,
-            lineHeight: 1,
-          }}
-        >
+        <span style={{ width: "100%", height: "100%", pointerEvents: "none",
+          display: "grid", placeItems: "center", borderRadius: "50%",
+          background: "radial-gradient(circle at 35% 30%, #fde047, #ca8a04)",
+          boxShadow: "0 0 14px #facc15, 0 0 28px rgba(250,204,21,0.6)",
+          border: "2px solid #fef08a",
+          fontSize: `${Math.round(obj.size * 0.5)}px` }}>
           💣
         </span>
       )}
