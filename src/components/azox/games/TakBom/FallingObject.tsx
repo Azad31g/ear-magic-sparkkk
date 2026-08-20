@@ -36,7 +36,9 @@ export function FallingObject({
         userSelect: "none",
         WebkitUserSelect: "none",
         pointerEvents: "all",
-        animation: `takbom-fall ${obj.duration}s linear forwards`,
+        animation: `takbom-fall ${obj.duration}s linear`,
+        animationFillMode: "forwards",
+        animationPlayState: "running",
         willChange: "transform",
         contain: "layout style",
       }}
