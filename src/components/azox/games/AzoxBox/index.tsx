@@ -1,10 +1,26 @@
+import { useEffect, useRef } from "react";
 import { Link } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
+import { useGameTasks } from "@/hooks/useGameTasks";
 import { BoxAnimation } from "./BoxAnimation";
 import { BOXES_PER_DAY, BOX_REWARD, MAX_WINNERS, SESSION_SECONDS, useAzoxBox } from "./useAzoxBox";
 
 export default function AzoxBox() {
   const box = useAzoxBox();
+  const { onBoxOpen } = useGameTasks();
+  const boxTaskFiredRef = useRef(false);
+
+  useEffect(() => {
+    if (!box.justOpened) {
+      boxTaskFiredRef.current = false;
+      return;
+    }
+    if (boxTaskFiredRef.current) return;
+    boxTaskFiredRef.current = true;
+    onBoxOpen();
+    toast.success("+1 Task earned! 📦");
+  }, [box.justOpened, onBoxOpen]);
 
   const phase = box.justOpened
     ? "opened"

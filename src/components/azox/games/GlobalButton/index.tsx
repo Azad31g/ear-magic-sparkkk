@@ -1,5 +1,8 @@
+import { useEffect, useRef } from "react";
 import { Link } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
+import { useGameTasks } from "@/hooks/useGameTasks";
 import { AZOX_IMAGES } from "@/lib/azox-images";
 import { formatHMS, useGlobalButton } from "./useGlobalButton";
 
@@ -15,6 +18,17 @@ export default function GlobalButton() {
     reward,
     handlePress,
   } = useGlobalButton();
+
+  const { onGlobalButtonWin } = useGameTasks();
+  const prevPressedRef = useRef(hasPressed);
+
+  useEffect(() => {
+    if (hasPressed && !prevPressedRef.current) {
+      onGlobalButtonWin();
+      toast.success("+1 Task earned! 🌍");
+    }
+    prevPressedRef.current = hasPressed;
+  }, [hasPressed, onGlobalButtonWin]);
 
   const secondsLeft = Math.ceil(timeLeft / 1000);
 
