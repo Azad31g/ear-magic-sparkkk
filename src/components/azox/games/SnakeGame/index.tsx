@@ -11,8 +11,10 @@ import { useSnakeLogic } from "./useSnakeLogic";
 
 export default function SnakeGame() {
   const { points, addPoints } = useAzox();
+  const finalScoreRef = useRef(0);
   const game = useSnakeLogic((score) => {
     if (score > 0) addPoints(score);
+    finalScoreRef.current = score;
   });
 
   const { onNewGlobalBest } = useGameTasks();
@@ -25,7 +27,7 @@ export default function SnakeGame() {
     }
     if (overFiredRef.current) return;
     overFiredRef.current = true;
-    const earnedTasks = onNewGlobalBest("snake", game.score);
+    const earnedTasks = onNewGlobalBest("snake", finalScoreRef.current);
     if (earnedTasks > 0) toast.success("+10 Tasks earned! 🏆 New Global Best!");
   }, [game.state, game.score, onNewGlobalBest]);
 

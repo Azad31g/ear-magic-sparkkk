@@ -16,6 +16,7 @@ export default function ShootGame({
 }) {
   const { onNewGlobalBest } = useGameTasks();
   const gameRef = useRef<Game | null>(null);
+  const finalScoreRef = useRef(0);
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
   const [timeMs, setTimeMs] = useState(0);
@@ -64,6 +65,7 @@ export default function ShootGame({
         onScore={setScore}
         onTime={setTimeMs}
         onGameOver={(p) => {
+          finalScoreRef.current = p.finalScore;
           const previousBest = readStorage<number>(SHOOT_BEST_KEY, 0);
           const newRecord = p.finalScore > previousBest;
           if (newRecord) {
@@ -71,7 +73,7 @@ export default function ShootGame({
             setBest(p.finalScore);
           }
           setOver({ ...p, newRecord });
-          const earnedTasks = onNewGlobalBest("shoot", p.finalScore);
+          const earnedTasks = onNewGlobalBest("shoot", finalScoreRef.current);
           if (earnedTasks > 0) {
             toast.success("+10 Tasks earned! 🏆 New Global Best!");
           }
