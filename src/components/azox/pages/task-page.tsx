@@ -161,20 +161,17 @@ function TaskGroup({ group }: { group: SocialTaskGroup }) {
 
 export function TaskPage() {
   const { dailyClaimed, claimDaily } = useAzox();
-  const { onDailyGiftClaimed, getGameTasksDone, getStreak } = useGameTasks();
-  const [gameTasksDone, setGameTasksDone] = useState(0);
+  const { onDailyGiftClaimed, getStreak } = useGameTasks();
   const [streak, setStreak] = useState(0);
 
   useEffect(() => {
-    setGameTasksDone(getGameTasksDone());
     setStreak(getStreak());
-  }, [getGameTasksDone, getStreak]);
+  }, [getStreak]);
 
   const handleClaimDaily = () => {
     claimDaily();
     const earned = onDailyGiftClaimed();
     if (earned > 0) toast.success("🔥 5-Day Streak! +3 Tasks earned!");
-    setGameTasksDone(getGameTasksDone());
     setStreak(getStreak());
   };
 
