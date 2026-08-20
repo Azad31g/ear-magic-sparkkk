@@ -6,10 +6,12 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { useAzox } from "@/components/azox/app-provider";
 import { AzoxFooter } from "@/components/azox/footer";
+import { useGameTasks } from "@/hooks/useGameTasks";
 import { RANKS, formatPoints, nextRank as getNextRank } from "@/lib/azox-data";
 
 export function ProfilePage() {
   const { user, points, rank, completedTasks, referrals } = useAzox();
+  const { getGameTasksDone } = useGameTasks();
   const [copied, setCopied] = useState(false);
   const referral = user.referralLink;
   const nextRank = getNextRank(points);
@@ -36,7 +38,7 @@ export function ProfilePage() {
   const stats = [
     { label: "Total Points", value: formatPoints(points), icon: Coins },
     { label: "Current Rank", value: rank.key, icon: Trophy },
-    { label: "Tasks Done", value: String(completedTasks.size), icon: Zap },
+    { label: "Tasks Done", value: String(completedTasks.size + getGameTasksDone()), icon: Zap },
     { label: "Referrals", value: String(referrals), icon: Users },
   ];
 
