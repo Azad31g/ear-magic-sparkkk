@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Crown } from "lucide-react";
+import { Crown, ArrowRight } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { formatPoints, type RankKey } from "@/lib/azox-data";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
@@ -25,28 +26,37 @@ export function LeaderboardPage() {
       </div>
 
       {/* Founder feature */}
-      <section className="glass glow-purple flex items-center gap-3 rounded-2xl p-4">
-        <Avatar className="size-12 border border-primary/40">
-          <AvatarFallback className="bg-primary/20 font-bold text-foreground">
-            AB
-          </AvatarFallback>
-        </Avatar>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            <Crown className="size-4 text-gold" aria-hidden="true" />
-            <p className="text-sm font-bold">Azad Bashqali</p>
+      <section className="glass glow-purple flex flex-col gap-3 rounded-2xl p-4">
+        <div className="flex items-center gap-3">
+          <Avatar className="size-12 border border-primary/40">
+            <AvatarFallback className="bg-primary/20 font-bold text-foreground">
+              AB
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <Crown className="size-4 text-gold" aria-hidden="true" />
+              <p className="text-sm font-bold">Azad Bashqali</p>
+            </div>
+            <p className="text-xs text-muted-foreground">Founder — AZOX Token</p>
           </div>
-          <p className="text-xs text-muted-foreground">Founder — AZOX Token</p>
+          <span
+            className="rounded-full border px-2.5 py-1 text-[11px] font-semibold"
+            style={{
+              color: rankColor("Legendary"),
+              borderColor: rankColor("Legendary"),
+            }}
+          >
+            Legendary
+          </span>
         </div>
-        <span
-          className="rounded-full border px-2.5 py-1 text-[11px] font-semibold"
-          style={{
-            color: rankColor("Legendary"),
-            borderColor: rankColor("Legendary"),
-          }}
+        <Link
+          to="/about"
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-white/10"
         >
-          Legendary
-        </span>
+          VIEW PROFILE
+          <ArrowRight className="size-4" aria-hidden="true" />
+        </Link>
       </section>
 
       {/* Rank tabs */}

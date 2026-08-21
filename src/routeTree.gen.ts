@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as AirdropRouteImport } from './routes/airdrop'
 import { Route as GamingRouteImport } from './routes/gaming'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
@@ -20,6 +21,11 @@ import { Route as GamesGameRouteImport } from './routes/games.$game'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AirdropRoute = AirdropRouteImport.update({
@@ -55,6 +61,7 @@ const GamesGameRoute = GamesGameRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/airdrop': typeof AirdropRoute
   '/gaming': typeof GamingRoute
   '/leaderboard': typeof LeaderboardRoute
@@ -64,6 +71,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/airdrop': typeof AirdropRoute
   '/gaming': typeof GamingRoute
   '/leaderboard': typeof LeaderboardRoute
@@ -74,6 +82,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/airdrop': typeof AirdropRoute
   '/gaming': typeof GamingRoute
   '/leaderboard': typeof LeaderboardRoute
@@ -85,6 +94,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/airdrop'
     | '/gaming'
     | '/leaderboard'
@@ -94,6 +104,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/airdrop'
     | '/gaming'
     | '/leaderboard'
@@ -103,6 +114,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/about'
     | '/airdrop'
     | '/gaming'
     | '/leaderboard'
@@ -113,6 +125,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
   AirdropRoute: typeof AirdropRoute
   GamingRoute: typeof GamingRoute
   LeaderboardRoute: typeof LeaderboardRoute
@@ -128,6 +141,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/airdrop': {
@@ -177,6 +197,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
   AirdropRoute: AirdropRoute,
   GamingRoute: GamingRoute,
   LeaderboardRoute: LeaderboardRoute,
