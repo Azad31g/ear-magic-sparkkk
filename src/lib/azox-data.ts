@@ -215,7 +215,7 @@ export const SOCIAL_TASKS: SocialTaskGroup[] = [
         platform: "Instagram",
         label: "Follow Azad Bashqali",
         points: 100,
-        url: "https://www.instagram.com/azadx?igsh=MXgzdnZnMGo2NmZncA==",
+        url: "https://www.instagram.com/azad__x_?igsi=MXgzdnZnMGo2NmZncA==",
       },
       {
         id: "ig-2",
