@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Crown } from "lucide-react";
+import { Crown, ArrowRight } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { formatPoints, type RankKey } from "@/lib/azox-data";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
