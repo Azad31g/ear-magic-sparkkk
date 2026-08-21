@@ -16,7 +16,7 @@ const FOUNDER_SOCIALS = [
   },
   {
     name: "Instagram",
-    url: "https://www.instagram.com/azadx?igsh=MXgzdnZnMGo2NmZncA==",
+    url: "https://www.instagram.com/azad__x_?igsi=MXgzdnZnMGo2NmZncA==",
     color: "#E1306C",
     icon: (
       <svg viewBox="0 0 24 24" className="size-5 stroke-current" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -136,11 +136,19 @@ export function AboutPage() {
       {/* Founder */}
       <section className="rounded-2xl border border-[#FFD700] bg-[#0d0d0d] p-5">
         <div className="flex flex-col items-center gap-4">
-          <Avatar className="size-24 border-4 border-[#FFD700]">
-            <AvatarFallback className="bg-[#22c55e] text-2xl font-bold text-white">
-              AB
-            </AvatarFallback>
-          </Avatar>
+          <img
+            src="/azox/azad-bashqali.jpg"
+            alt="Azad Bashqali"
+            style={{
+              width: 96, height: 96,
+              borderRadius: "50%",
+              objectFit: "cover",
+              border: "3px solid #CCFF00",
+            }}
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+          />
           <div className="text-center">
             <h2 className="text-2xl font-bold text-white">Azad Bashqali</h2>
             <p className="mt-0.5 text-sm font-medium text-[#FF7A18]">

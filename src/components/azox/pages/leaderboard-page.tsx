@@ -28,7 +28,15 @@ export function LeaderboardPage() {
       {/* Founder feature */}
       <section className="glass glow-purple flex flex-col gap-3 rounded-2xl p-4">
         <div className="flex items-center gap-3">
-          <Avatar className="size-12 border border-primary/40">
+          <Avatar className="size-12 border-2" style={{ borderColor: "#CCFF00" }}>
+            <img
+              src="/azox/azad-bashqali.jpg"
+              alt="Azad Bashqali"
+              className="size-full rounded-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
+            />
             <AvatarFallback className="bg-primary/20 font-bold text-foreground">
               AB
             </AvatarFallback>
@@ -40,19 +48,15 @@ export function LeaderboardPage() {
             </div>
             <p className="text-xs text-muted-foreground">Founder — AZOX Token</p>
           </div>
-          <span
-            className="rounded-full border px-2.5 py-1 text-[11px] font-semibold"
-            style={{
-              color: rankColor("Legendary"),
-              borderColor: rankColor("Legendary"),
-            }}
-          >
-            Legendary
-          </span>
         </div>
         <Link
           to="/about"
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-white/10"
+          className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all"
+          style={{
+            background: "#CCFF00",
+            color: "#000",
+            boxShadow: "0 0 12px rgba(204,255,0,0.4)",
+          }}
         >
           VIEW PROFILE
           <ArrowRight className="size-4" aria-hidden="true" />
