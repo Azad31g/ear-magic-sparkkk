@@ -390,6 +390,46 @@ export const LEADERBOARD: Record<RankKey, LeaderboardUser[]> = {
   ],
 };
 
+export type TaskLeader = {
+  name: string;
+  tasks: number;
+  avatar?: string;
+};
+
+export type ReferralLeader = {
+  name: string;
+  referrals: number;
+  avatar?: string;
+};
+
+// Demo task leaderboard, sorted by total tasks descending.
+export const LEADERBOARD_TASKS: TaskLeader[] = [
+  { name: "azox_whale", tasks: 1420 },
+  { name: "cryptoKing", tasks: 1385 },
+  { name: "tap_master", tasks: 1260 },
+  { name: "degen_dana", tasks: 1140 },
+  { name: "gem_hunter", tasks: 980 },
+  { name: "frostbyte", tasks: 870 },
+  { name: "lumina", tasks: 760 },
+  { name: "steel_fox", tasks: 650 },
+  { name: "orbit", tasks: 540 },
+  { name: "pulse", tasks: 430 },
+];
+
+// Demo referral leaderboard, sorted by total referrals descending.
+export const LEADERBOARD_REFERRALS: ReferralLeader[] = [
+  { name: "cryptoKing", referrals: 1280 },
+  { name: "azox_whale", referrals: 1190 },
+  { name: "solana_max", referrals: 980 },
+  { name: "tap_master", referrals: 860 },
+  { name: "degen_dana", referrals: 740 },
+  { name: "gem_hunter", referrals: 630 },
+  { name: "frostbyte", referrals: 520 },
+  { name: "steel_fox", referrals: 410 },
+  { name: "midas", referrals: 320 },
+  { name: "goldrush", referrals: 210 },
+];
+
 export function formatPoints(n: number): string {
   return n.toLocaleString("en-US");
 }

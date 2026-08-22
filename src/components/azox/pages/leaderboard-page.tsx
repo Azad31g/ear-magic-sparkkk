@@ -2,19 +2,35 @@ import { useState } from "react";
 import { Crown, ArrowRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
-import { formatPoints, type RankKey } from "@/lib/azox-data";
+import {
+  formatPoints,
+  type RankKey,
+  LEADERBOARD_TASKS,
+  LEADERBOARD_REFERRALS,
+} from "@/lib/azox-data";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
+type LeaderboardTab = "points" | "tasks" | "referrals";
+
+const ACTIVE_TAB_COLOR = "#CCFF00";
+
 export function LeaderboardPage() {
-  const [active, setActive] = useState<RankKey>("Legendary");
+  const [activeTab, setActiveTab] = useState<LeaderboardTab>("points");
+  const [activeRank, setActiveRank] = useState<RankKey>("Legendary");
   const {
     order: RANK_ORDER,
-    players: users,
+    players: pointUsers,
     thresholdFor,
     colorFor: rankColor,
-  } = useLeaderboard(active);
-  const activeThreshold = thresholdFor(active);
+  } = useLeaderboard(activeRank);
+  const activeThreshold = thresholdFor(activeRank);
+
+  const tabs = [
+    { key: "points", label: "POINT RANK" },
+    { key: "tasks", label: "TASK RANK" },
+    { key: "referrals", label: "REFERRAL RANK" },
+  ] as const;
 
   return (
     <div className="flex flex-col gap-5">
@@ -63,70 +79,151 @@ export function LeaderboardPage() {
         </Link>
       </section>
 
-      {/* Rank tabs */}
+      {/* Leaderboard type tabs */}
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
-        {RANK_ORDER.map((key) => {
-          const isActive = key === active;
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.key;
           return (
             <button
-              key={key}
+              key={tab.key}
               type="button"
-              onClick={() => setActive(key)}
+              onClick={() => setActiveTab(tab.key)}
               className={cn(
                 "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
                 isActive
                   ? "border-transparent text-background"
                   : "border-border text-muted-foreground hover:text-foreground",
               )}
-              style={isActive ? { backgroundColor: rankColor(key) } : undefined}
+              style={isActive ? { backgroundColor: ACTIVE_TAB_COLOR } : undefined}
             >
-              {key}
+              {tab.label}
             </button>
           );
         })}
       </div>
 
-      {/* Table */}
-      <section className="glass rounded-2xl p-2">
-        <div className="flex items-center justify-between px-3 py-2">
-          <h2 className="text-sm font-bold" style={{ color: rankColor(active) }}>
-            {active}
-          </h2>
-          <span className="text-[11px] text-muted-foreground">
-            {activeThreshold === 0
-              ? "Starter"
-              : `+${formatPoints(activeThreshold)}`}
-          </span>
-        </div>
-        <ul className="flex flex-col">
-          {users.map((u) => (
-            <li
-              key={u.name}
-              className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-secondary/40"
-            >
-              <span
-                className={cn(
-                  "w-5 text-center text-sm font-bold tabular-nums",
-                  u.position === 1 ? "text-gold" : "text-muted-foreground",
-                )}
-              >
-                {u.position}
+      {activeTab === "points" && (
+        <>
+          {/* Rank tabs */}
+          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+            {RANK_ORDER.map((key) => {
+              const isActive = key === activeRank;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setActiveRank(key)}
+                  className={cn(
+                    "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                    isActive
+                      ? "border-transparent text-background"
+                      : "border-border text-muted-foreground hover:text-foreground",
+                  )}
+                  style={isActive ? { backgroundColor: rankColor(key) } : undefined}
+                >
+                  {key}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Points table */}
+          <section className="glass rounded-2xl p-2">
+            <div className="flex items-center justify-between px-3 py-2">
+              <h2 className="text-sm font-bold" style={{ color: rankColor(activeRank) }}>
+                {activeRank}
+              </h2>
+              <span className="text-[11px] text-muted-foreground">
+                {activeThreshold === 0
+                  ? "Starter"
+                  : `+${formatPoints(activeThreshold)}`}
               </span>
-              <Avatar className="size-9">
-                <AvatarFallback className="bg-secondary text-xs font-semibold">
-                  {u.name.slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <span className="min-w-0 flex-1 truncate text-sm font-medium">
-                {u.name}
-              </span>
-              <span className="text-sm font-bold tabular-nums text-gold">
-                {formatPoints(u.points)}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
+            </div>
+            <ul className="flex flex-col">
+              {pointUsers.map((u) => (
+                <LeaderboardRow
+                  key={u.name}
+                  position={u.position}
+                  name={u.name}
+                  value={formatPoints(u.points)}
+                />
+              ))}
+            </ul>
+          </section>
+        </>
+      )}
+
+      {activeTab === "tasks" && (
+        <section className="glass rounded-2xl p-2">
+          <div className="flex items-center justify-between px-3 py-2">
+            <h2 className="text-sm font-bold" style={{ color: ACTIVE_TAB_COLOR }}>
+              TASK RANK
+            </h2>
+            <span className="text-[11px] text-muted-foreground">Total tasks</span>
+          </div>
+          <ul className="flex flex-col">
+            {LEADERBOARD_TASKS.map((u, i) => (
+              <LeaderboardRow
+                key={u.name}
+                position={i + 1}
+                name={u.name}
+                value={u.tasks.toLocaleString("en-US")}
+              />
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {activeTab === "referrals" && (
+        <section className="glass rounded-2xl p-2">
+          <div className="flex items-center justify-between px-3 py-2">
+            <h2 className="text-sm font-bold" style={{ color: ACTIVE_TAB_COLOR }}>
+              REFERRAL RANK
+            </h2>
+            <span className="text-[11px] text-muted-foreground">Total referrals</span>
+          </div>
+          <ul className="flex flex-col">
+            {LEADERBOARD_REFERRALS.map((u, i) => (
+              <LeaderboardRow
+                key={u.name}
+                position={i + 1}
+                name={u.name}
+                value={u.referrals.toLocaleString("en-US")}
+              />
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
+  );
+}
+
+function LeaderboardRow({
+  position,
+  name,
+  value,
+}: {
+  position: number;
+  name: string;
+  value: string;
+}) {
+  return (
+    <li className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-secondary/40">
+      <span
+        className={cn(
+          "w-5 text-center text-sm font-bold tabular-nums",
+          position === 1 ? "text-gold" : "text-muted-foreground",
+        )}
+      >
+        {position}
+      </span>
+      <Avatar className="size-9">
+        <AvatarFallback className="bg-secondary text-xs font-semibold">
+          {name.slice(0, 2).toUpperCase()}
+        </AvatarFallback>
+      </Avatar>
+      <span className="min-w-0 flex-1 truncate text-sm font-medium">{name}</span>
+      <span className="text-sm font-bold tabular-nums text-gold">{value}</span>
+    </li>
   );
 }
