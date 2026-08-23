@@ -17,6 +17,7 @@ import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as GamesGameRouteImport } from './routes/games.$game'
+import { Route as ApiPublicInstagramWebhookRouteImport } from './routes/api/public/instagram/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -58,6 +59,12 @@ const GamesGameRoute = GamesGameRouteImport.update({
   path: '/games/$game',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicInstagramWebhookRoute =
+  ApiPublicInstagramWebhookRouteImport.update({
+    id: '/api/public/instagram/webhook',
+    path: '/api/public/instagram/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -68,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/tasks': typeof TasksRoute
   '/games/$game': typeof GamesGameRoute
+  '/api/public/instagram/webhook': typeof ApiPublicInstagramWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -78,6 +86,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/tasks': typeof TasksRoute
   '/games/$game': typeof GamesGameRoute
+  '/api/public/instagram/webhook': typeof ApiPublicInstagramWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,6 +98,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/tasks': typeof TasksRoute
   '/games/$game': typeof GamesGameRoute
+  '/api/public/instagram/webhook': typeof ApiPublicInstagramWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +111,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/tasks'
     | '/games/$game'
+    | '/api/public/instagram/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,6 +122,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/tasks'
     | '/games/$game'
+    | '/api/public/instagram/webhook'
   id:
     | '__root__'
     | '/'
@@ -121,6 +133,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/tasks'
     | '/games/$game'
+    | '/api/public/instagram/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -132,6 +145,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   TasksRoute: typeof TasksRoute
   GamesGameRoute: typeof GamesGameRoute
+  ApiPublicInstagramWebhookRoute: typeof ApiPublicInstagramWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -192,6 +206,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GamesGameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/instagram/webhook': {
+      id: '/api/public/instagram/webhook'
+      path: '/api/public/instagram/webhook'
+      fullPath: '/api/public/instagram/webhook'
+      preLoaderRoute: typeof ApiPublicInstagramWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -204,6 +225,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   TasksRoute: TasksRoute,
   GamesGameRoute: GamesGameRoute,
+  ApiPublicInstagramWebhookRoute: ApiPublicInstagramWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
