@@ -40,7 +40,7 @@ async function loadAppKitProvider() {
   }
   console.error("AppKit runtime failed to load", lastError);
   return {
-    default: ({ children }: { children: React.ReactNode }) => (
+    default: ({ children }: { children: ReactNode }) => (
       <WagmiProvider config={getSsrWagmiConfig()}>{children}</WagmiProvider>
     ),
   };
