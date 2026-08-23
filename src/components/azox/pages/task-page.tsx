@@ -219,10 +219,12 @@ export function TaskPage() {
         </Button>
       </section>
 
-      {/* Social tasks */}
-      {SOCIAL_TASKS.map((group) => (
-        <TaskGroup key={group.platform} group={group} />
-      ))}
+      {/* Social tasks — ordered: Telegram, Instagram, TikTok, X, YouTube, Discord */}
+      {TASK_ORDER.map((platform) => {
+        const group = SOCIAL_TASKS.find((g) => g.platform === platform);
+        return group ? <TaskGroup key={group.platform} group={group} /> : null;
+      })}
+
 
       <AzoxFooter />
     </div>
