@@ -35,6 +35,16 @@ const PLATFORM_ICONS: Record<string, typeof Send> = {
   Discord: MessagesSquare,
 };
 
+const TASK_ORDER = [
+  "Telegram",
+  "Instagram",
+  "TikTok",
+  "X (Twitter)",
+  "YouTube",
+  "Discord",
+];
+
+
 function TaskRow({ task, color }: { task: SocialTask; color: string }) {
   const { completedTasks, completeTask, user } = useAzox();
   const claimed = completedTasks.has(task.id);
