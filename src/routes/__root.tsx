@@ -24,16 +24,30 @@ import { lazy, Suspense } from "react";
 
 
 // Browser-only AppKit + WagmiAdapter provider (see appkit-runtime.tsx).
-// No silent fallback: if this chunk fails to load, the error must surface
-// instead of downgrading the app to a connector-free wagmi config.
-const AppKitWagmiProvider = lazy(() =>
-  import("../lib/appkit-runtime")
-    .then((m) => ({ default: m.AppKitWagmiProvider }))
-    .catch((err) => {
-      console.error("AppKit runtime failed to load", err);
-      throw err;
-    }),
-);
+// The dynamic chunk can fail transiently (dev re-optimization, flaky network).
+// Retry a few times, and if it still fails, degrade to the read-only wagmi
+// config so the whole app doesn't go blank.
+async function loadAppKitProvider() {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const m = await import("../lib/appkit-runtime");
+      return { default: m.AppKitWagmiProvider };
+    } catch (err) {
+      lastError = err;
+      await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
+    }
+  }
+  console.error("AppKit runtime failed to load", lastError);
+  return {
+    default: ({ children }: { children: React.ReactNode }) => (
+      <WagmiProvider config={getSsrWagmiConfig()}>{children}</WagmiProvider>
+    ),
+  };
+}
+
+const AppKitWagmiProvider = lazy(loadAppKitProvider);
+
 
 
 const queryClient = new QueryClient();
