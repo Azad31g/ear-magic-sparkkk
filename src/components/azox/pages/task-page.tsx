@@ -35,6 +35,16 @@ const PLATFORM_ICONS: Record<string, typeof Send> = {
   Discord: MessagesSquare,
 };
 
+const TASK_ORDER = [
+  "Telegram",
+  "Instagram",
+  "TikTok",
+  "X (Twitter)",
+  "YouTube",
+  "Discord",
+];
+
+
 function TaskRow({ task, color }: { task: SocialTask; color: string }) {
   const { completedTasks, completeTask, user } = useAzox();
   const claimed = completedTasks.has(task.id);
@@ -219,10 +229,12 @@ export function TaskPage() {
         </Button>
       </section>
 
-      {/* Social tasks */}
-      {SOCIAL_TASKS.map((group) => (
-        <TaskGroup key={group.platform} group={group} />
-      ))}
+      {/* Social tasks — ordered: Telegram, Instagram, TikTok, X, YouTube, Discord */}
+      {TASK_ORDER.map((platform) => {
+        const group = SOCIAL_TASKS.find((g) => g.platform === platform);
+        return group ? <TaskGroup key={group.platform} group={group} /> : null;
+      })}
+
 
       <AzoxFooter />
     </div>
