@@ -60,14 +60,12 @@ export function useSupabaseTasks() {
       if (cancelled) return;
 
       if (err) {
-        console.error("[tasks] fetch error", err);
         setError(err.message);
         setGroups([]);
         setLoading(false);
         return;
       }
 
-      console.log("[tasks] rows", (data ?? []).length);
       const byPlatform = new Map<string, SocialTask[]>();
       for (const row of (data ?? []) as TaskRow[]) {
         const label = PLATFORM_LABELS[row.platform] ?? row.platform;
