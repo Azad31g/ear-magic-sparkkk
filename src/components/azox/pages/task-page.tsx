@@ -17,12 +17,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { useAzox } from "@/components/azox/app-provider";
 import { useGameTasks } from "@/hooks/useGameTasks";
+import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { verifyTelegramMembership } from "@/lib/telegram-verify.functions";
-import {
-  SOCIAL_TASKS,
-  type SocialTask,
-  type SocialTaskGroup,
-} from "@/lib/azox-data";
+import { type SocialTask, type SocialTaskGroup } from "@/lib/azox-data";
 import { AzoxFooter } from "@/components/azox/footer";
 import { cn } from "@/lib/utils";
 
@@ -60,7 +57,7 @@ function TaskRow({ task, color }: { task: SocialTask; color: string }) {
   };
 
   const handleClaim = () => {
-    completeTask(task.id);
+    completeTask(task.id, task.points);
     setState("done");
     toast.success(`+${task.points} points added`);
   };
@@ -172,6 +169,7 @@ function TaskGroup({ group }: { group: SocialTaskGroup }) {
 export function TaskPage() {
   const { dailyClaimed, claimDaily } = useAzox();
   const { onDailyGiftClaimed, getStreak } = useGameTasks();
+  const { groups, loading } = useSupabaseTasks();
   const [streak, setStreak] = useState(0);
 
   useEffect(() => {
@@ -230,10 +228,21 @@ export function TaskPage() {
       </section>
 
       {/* Social tasks — ordered: Telegram, Instagram, TikTok, X, YouTube, Discord */}
-      {TASK_ORDER.map((platform) => {
-        const group = SOCIAL_TASKS.find((g) => g.platform === platform);
-        return group ? <TaskGroup key={group.platform} group={group} /> : null;
-      })}
+      {loading ? (
+        <div className="flex items-center justify-center py-10">
+          <Loader2
+            className="size-6 animate-spin text-primary"
+            aria-hidden="true"
+          />
+        </div>
+      ) : (
+        TASK_ORDER.map((platform) => {
+          const group = groups.find((g) => g.platform === platform);
+          return group && group.tasks.length > 0 ? (
+            <TaskGroup key={group.platform} group={group} />
+          ) : null;
+        })
+      )}
 
 
       <AzoxFooter />

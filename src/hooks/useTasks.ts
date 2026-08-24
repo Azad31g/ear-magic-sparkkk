@@ -33,10 +33,11 @@ export function useTasks(onEarn?: (amount: number) => void) {
   );
 
   const completeTask = useCallback(
-    (id: string) => {
+    (id: string, fallbackPoints?: number) => {
       if (state.completed.includes(id)) return 0;
       const points =
         SOCIAL_TASKS.flatMap((g) => g.tasks).find((t) => t.id === id)?.points ??
+        fallbackPoints ??
         0;
       setState((prev) =>
         prev.completed.includes(id)
