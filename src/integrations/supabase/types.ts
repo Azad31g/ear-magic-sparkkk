@@ -16,7 +16,7 @@ export type Database = {
     Tables: {
       tasks: {
         Row: {
-          created_at: string
+          created_at: string | null
           id: string
           platform: string
           points: number
@@ -26,8 +26,8 @@ export type Database = {
           url: string
         }
         Insert: {
-          created_at?: string
-          id: string
+          created_at?: string | null
+          id?: string
           platform: string
           points?: number
           sort_order?: number
@@ -36,7 +36,7 @@ export type Database = {
           url: string
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           id?: string
           platform?: string
           points?: number
