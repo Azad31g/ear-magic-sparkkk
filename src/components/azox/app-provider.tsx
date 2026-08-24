@@ -20,7 +20,7 @@ type AzoxState = {
   addPoints: (n: number) => void;
   tap: (fingers?: number) => number;
   completedTasks: Set<string>;
-  completeTask: (id: string) => void;
+  completeTask: (id: string, fallbackPoints?: number) => void;
   dailyClaimed: boolean;
   claimDaily: () => void;
   globalWins: number;
