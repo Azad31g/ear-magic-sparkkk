@@ -20,3 +20,4 @@ export const externalSupabase = createClient(
     },
   },
 );
+// @ts-ignore - tasks table exists in the external Supabase project

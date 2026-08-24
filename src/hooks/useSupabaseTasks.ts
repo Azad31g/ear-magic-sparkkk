@@ -50,6 +50,7 @@ export function useSupabaseTasks() {
     let cancelled = false;
 
     (async () => {
+      console.log("[useSupabaseTasks] fetching from:", "oevefjiajicjtbhqvglk");
       const { data, error: err } = await supabase
         .from("tasks")
         .select("id, platform, title, url, points, status, sort_order")
@@ -60,11 +61,15 @@ export function useSupabaseTasks() {
       if (cancelled) return;
 
       if (err) {
+        console.error("[useSupabaseTasks] Supabase error:", err);
+        console.error("[useSupabaseTasks] Error details:", JSON.stringify(err));
         setError(err.message);
         setGroups([]);
         setLoading(false);
         return;
       }
+
+      console.log("[useSupabaseTasks] data received:", data?.length, "tasks");
 
       const byPlatform = new Map<string, SocialTask[]>();
       for (const row of (data ?? []) as TaskRow[]) {
