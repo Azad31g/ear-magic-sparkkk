@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { externalSupabase as supabase } from "@/integrations/external-supabase/client";
 import {
   SOCIAL_TASKS,
   type SocialTask,
