@@ -111,6 +111,18 @@ begin
   set instagram_username = excluded.instagram_username
   where public.instagram_links.telegram_user_id = excluded.telegram_user_id;
 
+  select telegram_user_id
+  into linked_telegram_user_id
+  from public.instagram_links
+  where instagram_scoped_id = _instagram_scoped_id;
+
+  if linked_telegram_user_id is distinct from claimed.telegram_user_id then
+    update public.verification_sessions
+    set status = 'failed', completed_at = now(), verification_code = null
+    where session_id = _session_id;
+    return false;
+  end if;
+
   insert into public.instagram_verifications (
     telegram_user_id,
     task_id,

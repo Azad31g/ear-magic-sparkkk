@@ -97,7 +97,7 @@ export const Route = createFileRoute("/api/public/instagram/webhook")({
 
         const verificationCode = messageText
           .toUpperCase()
-          .match(/(?:^|\s)(AZOX-[A-HJ-NP-Z2-9]{8})(?=\s|$|[.,!?])/i)?.[1];
+          .match(/\b(AZOX-[A-HJ-NP-Z2-9]{8})\b/i)?.[1];
         if (!verificationCode) {
           console.warn("[instagram-webhook] message did not contain a verification code", {
             senderId,
