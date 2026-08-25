@@ -1,6 +1,13 @@
 alter table public.verification_sessions
   add column if not exists verification_code text;
 
+alter table public.verification_sessions
+  drop constraint if exists verification_sessions_status_check;
+
+alter table public.verification_sessions
+  add constraint verification_sessions_status_check
+  check (status in ('pending', 'processing', 'verified', 'failed', 'expired', 'rejected'));
+
 create unique index if not exists verification_sessions_active_code_uidx
   on public.verification_sessions (verification_code)
   where verification_code is not null
