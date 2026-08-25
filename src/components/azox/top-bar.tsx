@@ -44,6 +44,16 @@ export function TopBar() {
               {formatPoints(points)}
             </span>
           </div>
+          <Link
+            to="/announcements"
+            aria-label="Announcements"
+            className="glass relative flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <Bell className="size-4" aria-hidden="true" />
+            {hasNew && (
+              <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-[#ef4444]" />
+            )}
+          </Link>
         </div>
       </div>
     </header>
