@@ -1,10 +1,14 @@
-import { Coins } from "lucide-react";
+import { Coins, Bell } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { useAzox } from "./app-provider";
 import { formatPoints } from "@/lib/azox-data";
 import { AZOX_IMAGES } from "@/lib/azox-images";
+import { useAnnouncements } from "@/hooks/useAnnouncements";
 
 export function TopBar() {
   const { points, rank } = useAzox();
+  const { hasNew } = useAnnouncements();
+
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl">
@@ -40,6 +44,16 @@ export function TopBar() {
               {formatPoints(points)}
             </span>
           </div>
+          <Link
+            to="/announcements"
+            aria-label="Announcements"
+            className="glass relative flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <Bell className="size-4" aria-hidden="true" />
+            {hasNew && (
+              <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-[#ef4444]" />
+            )}
+          </Link>
         </div>
       </div>
     </header>

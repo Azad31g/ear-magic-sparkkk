@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AirdropRouteImport } from './routes/airdrop'
+import { Route as AnnouncementsRouteImport } from './routes/announcements'
 import { Route as GamingRouteImport } from './routes/gaming'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -32,6 +33,11 @@ const AboutRoute = AboutRouteImport.update({
 const AirdropRoute = AirdropRouteImport.update({
   id: '/airdrop',
   path: '/airdrop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnnouncementsRoute = AnnouncementsRouteImport.update({
+  id: '/announcements',
+  path: '/announcements',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GamingRoute = GamingRouteImport.update({
@@ -70,6 +76,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/airdrop': typeof AirdropRoute
+  '/announcements': typeof AnnouncementsRoute
   '/gaming': typeof GamingRoute
   '/leaderboard': typeof LeaderboardRoute
   '/profile': typeof ProfileRoute
@@ -81,6 +88,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/airdrop': typeof AirdropRoute
+  '/announcements': typeof AnnouncementsRoute
   '/gaming': typeof GamingRoute
   '/leaderboard': typeof LeaderboardRoute
   '/profile': typeof ProfileRoute
@@ -93,6 +101,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/airdrop': typeof AirdropRoute
+  '/announcements': typeof AnnouncementsRoute
   '/gaming': typeof GamingRoute
   '/leaderboard': typeof LeaderboardRoute
   '/profile': typeof ProfileRoute
@@ -106,6 +115,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/airdrop'
+    | '/announcements'
     | '/gaming'
     | '/leaderboard'
     | '/profile'
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/airdrop'
+    | '/announcements'
     | '/gaming'
     | '/leaderboard'
     | '/profile'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/airdrop'
+    | '/announcements'
     | '/gaming'
     | '/leaderboard'
     | '/profile'
@@ -140,6 +152,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   AirdropRoute: typeof AirdropRoute
+  AnnouncementsRoute: typeof AnnouncementsRoute
   GamingRoute: typeof GamingRoute
   LeaderboardRoute: typeof LeaderboardRoute
   ProfileRoute: typeof ProfileRoute
@@ -169,6 +182,13 @@ declare module '@tanstack/react-router' {
       path: '/airdrop'
       fullPath: '/airdrop'
       preLoaderRoute: typeof AirdropRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/announcements': {
+      id: '/announcements'
+      path: '/announcements'
+      fullPath: '/announcements'
+      preLoaderRoute: typeof AnnouncementsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/gaming': {
@@ -220,6 +240,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AirdropRoute: AirdropRoute,
+  AnnouncementsRoute: AnnouncementsRoute,
   GamingRoute: GamingRoute,
   LeaderboardRoute: LeaderboardRoute,
   ProfileRoute: ProfileRoute,

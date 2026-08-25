@@ -433,7 +433,13 @@ export const LEADERBOARD_REFERRALS: ReferralLeader[] = [
 ];
 
 export function formatPoints(n: number): string {
-  return n.toLocaleString("en-US");
+  if (n >= 1_000_000) {
+    return (n / 1_000_000).toFixed(3).replace(/\.?0+$/, "") + "M";
+  }
+  if (n >= 1_000) {
+    return (n / 1_000).toFixed(2).replace(/\.?0+$/, "") + "K";
+  }
+  return n.toString();
 }
 
 export const GAME_TASK_RULES = {
