@@ -1,10 +1,14 @@
-import { Coins } from "lucide-react";
+import { Coins, Bell } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { useAzox } from "./app-provider";
 import { formatPoints } from "@/lib/azox-data";
 import { AZOX_IMAGES } from "@/lib/azox-images";
+import { useAnnouncements } from "@/hooks/useAnnouncements";
 
 export function TopBar() {
   const { points, rank } = useAzox();
+  const { hasNew } = useAnnouncements();
+
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl">
