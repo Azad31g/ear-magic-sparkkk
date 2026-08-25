@@ -88,7 +88,7 @@ export function useSupabaseTasks() {
         console.log("[useSupabaseTasks] data received:", data?.length, "tasks");
 
         const byPlatform = new Map<string, SocialTask[]>();
-        for (const row of (data ?? []) as TaskRow[]) {
+        for (const row of (data ?? []) as unknown as TaskRow[]) {
           const label = PLATFORM_LABELS[row.platform] ?? row.platform;
           const chat = telegramChat(row.url);
           const task: SocialTask = {
