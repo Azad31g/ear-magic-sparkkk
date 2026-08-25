@@ -1,7 +1,9 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, Megaphone } from "lucide-react";
-import { useAnnouncements } from "@/hooks/useAnnouncements";
+import { ArrowLeft, Megaphone, X } from "lucide-react";
+import { useAnnouncements, type Announcement } from "@/hooks/useAnnouncements";
+
+const READ_KEY = "azox_read_announcements";
 
 function formatStamp(iso: string) {
   return new Date(iso)
@@ -15,12 +17,46 @@ function formatStamp(iso: string) {
     .replace(",", " •");
 }
 
+function readIds(): string[] {
+  try {
+    const raw = localStorage.getItem(READ_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 export function AnnouncementsPage() {
   const { announcements, markSeen } = useAnnouncements();
+  const [read, setRead] = useState<string[]>([]);
+  const [open, setOpen] = useState<Announcement | null>(null);
 
   useEffect(() => {
     markSeen();
   }, [markSeen]);
+
+  useEffect(() => {
+    setRead(readIds());
+  }, []);
+
+  const openAnnouncement = useCallback((a: Announcement) => {
+    setOpen(a);
+    setRead((prev) => {
+      if (prev.includes(a.id)) return prev;
+      const next = [...prev, a.id];
+      try {
+        localStorage.setItem(READ_KEY, JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }, []);
+
+  const sorted = [...announcements].sort(
+    (a, b) => +new Date(b.created_at) - +new Date(a.created_at),
+  );
 
   return (
     <div className="space-y-4 pb-6">
@@ -38,27 +74,87 @@ export function AnnouncementsPage() {
         </h1>
       </div>
 
-      {announcements.length === 0 ? (
+      {sorted.length === 0 ? (
         <p className="rounded-2xl border border-border bg-card/60 p-6 text-center text-sm text-muted-foreground">
           No announcements yet.
         </p>
       ) : (
-        <ul className="space-y-3">
-          {announcements.map((a) => (
-            <li
-              key={a.id}
-              className="rounded-2xl border border-border border-l-4 border-l-[#f97316] bg-card/70 p-4"
-            >
-              <p className="text-sm font-bold text-foreground">{a.title}</p>
-              <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">
-                {a.message}
-              </p>
-              <p className="mt-2 text-[11px] text-muted-foreground/70">
-                {formatStamp(a.created_at)}
-              </p>
-            </li>
-          ))}
+        <ul className="space-y-2.5">
+          {sorted.map((a) => {
+            const unread = !read.includes(a.id);
+            return (
+              <li key={a.id}>
+                <button
+                  type="button"
+                  onClick={() => openAnnouncement(a)}
+                  className="flex w-full items-start gap-3 rounded-2xl border border-border bg-card/70 p-3.5 text-left transition-colors duration-150 hover:bg-card active:scale-[0.99] active:bg-secondary"
+                >
+                  <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-secondary">
+                    <Megaphone className="size-4 text-gold" aria-hidden="true" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-2">
+                      <span className="truncate text-sm font-bold text-foreground">
+                        {a.title}
+                      </span>
+                      {unread && (
+                        <span
+                          className="size-2 shrink-0 rounded-full bg-destructive"
+                          aria-label="Unread"
+                        />
+                      )}
+                    </span>
+                    <span className="mt-1 line-clamp-2 block text-xs text-muted-foreground">
+                      {a.message}
+                    </span>
+                    <span className="mt-1.5 block text-[11px] text-muted-foreground/70">
+                      {formatStamp(a.created_at)}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
         </ul>
+      )}
+
+      {open && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 sm:items-center sm:p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setOpen(null)}
+        >
+          <div
+            className="flex max-h-[85vh] w-full max-w-md flex-col rounded-t-3xl border border-border bg-card sm:rounded-3xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3 border-b border-border p-4">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-secondary">
+                <Megaphone className="size-4 text-gold" aria-hidden="true" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-base font-bold text-foreground">{open.title}</p>
+                <p className="mt-0.5 text-[11px] text-muted-foreground/70">
+                  {formatStamp(open.created_at)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOpen(null)}
+                aria-label="Close announcement"
+                className="glass flex size-8 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+            <div className="overflow-y-auto p-4">
+              <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+                {open.message}
+              </p>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
