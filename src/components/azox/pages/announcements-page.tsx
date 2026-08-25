@@ -90,10 +90,12 @@ export function AnnouncementsPage() {
                   className="relative w-full overflow-hidden rounded-3xl border border-border bg-card/70 py-3 pl-5 pr-4 text-left transition-colors duration-150 hover:bg-card active:scale-[0.99] active:bg-secondary"
                 >
                   <span
-                    className="pointer-events-none absolute inset-y-0 left-0 w-6 rounded-l-3xl border-l-[3px] border-y-[3px] border-[#ff7a18]"
-                    style={{ borderRight: "none", maskImage: "linear-gradient(to right, black 40%, transparent 100%)", WebkitMaskImage: "linear-gradient(to right, black 40%, transparent 100%)" }}
+                    className="pointer-events-none absolute inset-y-0 left-0 w-[14px] overflow-hidden"
                     aria-hidden="true"
-                  />
+                  >
+                    <span className="absolute inset-y-0 left-0 w-[200px] rounded-3xl border-[3px] border-[#ff7a18]" />
+                  </span>
+
                   <span className="relative block min-w-0">
                     <span className="flex items-center gap-2">
                       <span className="truncate text-[14px] font-bold leading-tight text-foreground">
