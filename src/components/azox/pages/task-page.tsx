@@ -169,7 +169,7 @@ function TaskGroup({ group }: { group: SocialTaskGroup }) {
 export function TaskPage() {
   const { dailyClaimed, claimDaily } = useAzox();
   const { onDailyGiftClaimed, getStreak } = useGameTasks();
-  const { groups, loading } = useSupabaseTasks();
+  const { groups, loading, error } = useSupabaseTasks();
   const [streak, setStreak] = useState(0);
 
   useEffect(() => {
@@ -228,6 +228,11 @@ export function TaskPage() {
       </section>
 
       {/* Social tasks — ordered: Telegram, Instagram, TikTok, X, YouTube, Discord */}
+      {error && (
+        <p style={{ color: "red", padding: 16 }}>
+          Error: {error}
+        </p>
+      )}
       {loading ? (
         <div className="flex items-center justify-center py-10">
           <Loader2
