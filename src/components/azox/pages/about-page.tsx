@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, Gamepad2, Brain, ShieldCheck, Wallet, Users, MessageSquare } from "lucide-react";
+import { SiSnapchat } from "react-icons/si";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import azoxLogo from "@/assets/azox/azox-logo.png.asset.json";
 
@@ -40,11 +41,7 @@ const FOUNDER_SOCIALS = [
     name: "Snapchat",
     url: "https://www.snapchat.com/add/azad_agha2002?share_id=1FUYMfEWuh8&locale=en-US",
     color: "#FFFC00",
-    icon: (
-      <svg viewBox="0 0 24 24" className="size-5 fill-current">
-        <path d="M12 2.2c2.7 0 4.9 1.9 4.9 4.3 0 1.6-.7 2.7-1.9 3.7 1.1.6 2.6 1.6 2.6 3.3 0 1.8-1.7 2.9-3.4 2.9-.6 0-1.1-.1-1.6-.3-.5-.2-1-.4-1.5-.4s-1 .2-1.5.4c-.5.2-1 .3-1.6.3-1.7 0-3.4-1.1-3.4-2.9 0-1.7 1.5-2.7 2.6-3.3-1.2-1-1.9-2.1-1.9-3.7 0-2.4 2.2-4.3 4.9-4.3z" />
-      </svg>
-    ),
+    icon: <SiSnapchat className="size-5 fill-current" />,
   },
 ];
 
