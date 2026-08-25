@@ -109,6 +109,8 @@ export type SocialTask = {
   url: string;
   /** Telegram public group/channel username used for membership verification. */
   verifyChat?: string;
+  /** Bonus task reward associated with this task. */
+  taskReward?: number;
 };
 
 export type SocialTaskGroup = {
