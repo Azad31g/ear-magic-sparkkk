@@ -69,7 +69,6 @@ export function useTasks(onEarn?: (amount: number) => void) {
   }, [onEarn]);
 
   return {
-    groups: SOCIAL_TASKS,
     completedTasks,
     completeTask,
     isCompleted: (id: string) => completedTasks.has(id),
