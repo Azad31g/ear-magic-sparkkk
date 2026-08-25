@@ -48,55 +48,84 @@ export function useSupabaseTasks() {
 
   useEffect(() => {
     let cancelled = false;
+    let timedOut = false;
 
     (async () => {
+      console.log("[tasks] starting fetch...");
       console.log("[useSupabaseTasks] fetching from:", "oevefjiajicjtbhqvglk");
-      const { data, error: err } = await supabase
-        .from("tasks")
-        .select("id, platform, title, url, points, status, sort_order")
-        .eq("status", "active")
-        .order("platform", { ascending: true })
-        .order("sort_order", { ascending: true });
 
-      if (cancelled) return;
+      const timeout = new Promise<never>((_, reject) => {
+        setTimeout(() => {
+          timedOut = true;
+          reject(new Error("Request timed out after 5 seconds"));
+        }, 5000);
+      });
 
-      if (err) {
-        console.error("[useSupabaseTasks] Supabase error:", err);
-        console.error("[useSupabaseTasks] Error details:", JSON.stringify(err));
-        setError(err.message);
-        setGroups([]);
+      try {
+        const { data, error: err } = await Promise.race([
+          supabase
+            .from("tasks")
+            .select("id, platform, title, url, points, status, sort_order")
+            .eq("status", "active")
+            .order("platform", { ascending: true })
+            .order("sort_order", { ascending: true }),
+          timeout,
+        ]);
+
+        if (cancelled) return;
+
+        if (err) {
+          console.error("[useSupabaseTasks] Supabase error:", err);
+          console.error("[useSupabaseTasks] Error details:", JSON.stringify(err));
+          setError(err.message);
+          setGroups([]);
+          setLoading(false);
+          return;
+        }
+
+        console.log("[useSupabaseTasks] data received:", data?.length, "tasks");
+
+        const byPlatform = new Map<string, SocialTask[]>();
+        for (const row of (data ?? []) as TaskRow[]) {
+          const label = PLATFORM_LABELS[row.platform] ?? row.platform;
+          const chat = telegramChat(row.url);
+          const task: SocialTask = {
+            id: row.id,
+            platform: label,
+            label: row.title,
+            points: row.points,
+            url: row.url,
+            ...(row.platform === "telegram" && chat ? { verifyChat: chat } : {}),
+          };
+          const list = byPlatform.get(label) ?? [];
+          list.push(task);
+          byPlatform.set(label, list);
+        }
+
+        setGroups(
+          [...byPlatform.entries()].map(([platform, tasks]) => ({
+            platform,
+            ...groupMeta(platform),
+            tasks,
+          })),
+        );
+        setError(null);
         setLoading(false);
-        return;
+      } catch (e) {
+        if (cancelled) return;
+        if (timedOut) {
+          console.error("[useSupabaseTasks] Timeout after 5 seconds");
+          setError("Timed out while loading tasks. Please try again.");
+          setGroups([]);
+          setLoading(false);
+        } else {
+          const message = e instanceof Error ? e.message : "Unknown error";
+          console.error("[useSupabaseTasks] Fetch error:", e);
+          setError(message);
+          setGroups([]);
+          setLoading(false);
+        }
       }
-
-      console.log("[useSupabaseTasks] data received:", data?.length, "tasks");
-
-      const byPlatform = new Map<string, SocialTask[]>();
-      for (const row of (data ?? []) as TaskRow[]) {
-        const label = PLATFORM_LABELS[row.platform] ?? row.platform;
-        const chat = telegramChat(row.url);
-        const task: SocialTask = {
-          id: row.id,
-          platform: label,
-          label: row.title,
-          points: row.points,
-          url: row.url,
-          ...(row.platform === "telegram" && chat ? { verifyChat: chat } : {}),
-        };
-        const list = byPlatform.get(label) ?? [];
-        list.push(task);
-        byPlatform.set(label, list);
-      }
-
-      setGroups(
-        [...byPlatform.entries()].map(([platform, tasks]) => ({
-          platform,
-          ...groupMeta(platform),
-          tasks,
-        })),
-      );
-      setError(null);
-      setLoading(false);
     })();
 
     return () => {
