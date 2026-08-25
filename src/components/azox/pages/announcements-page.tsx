@@ -85,10 +85,10 @@ export function AnnouncementsPage() {
             return (
               <li key={a.id} className="relative pl-2.5">
                 <span
-                  className="pointer-events-none absolute inset-y-0 left-0 w-[14px] overflow-hidden"
+                  className="pointer-events-none absolute inset-y-0 left-[7px] z-10 w-[7px] overflow-hidden"
                   aria-hidden="true"
                 >
-                  <span className="absolute inset-y-0 left-0 w-[200px] rounded-3xl border-[3px] border-[#ff7a18]" />
+                  <span className="absolute inset-y-0 left-0 w-[calc(100vw-2.5rem)] max-w-md rounded-3xl border-[3px] border-[#ff7a18]" />
                 </span>
                 <button
                   type="button"
