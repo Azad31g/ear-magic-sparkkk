@@ -92,7 +92,9 @@ function TaskRow({ task, color }: { task: SocialTask; color: string }) {
     <div className="flex items-center gap-3 rounded-xl border border-border bg-secondary/40 px-3 py-2.5">
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{task.label}</p>
-        <p className="text-xs font-semibold text-gold">+{task.points}</p>
+        <p className="text-xs font-semibold text-gold">
+          +{task.points} pts{(task.taskReward ?? 0) > 0 ? ` & +${task.taskReward} Task` : ""}
+        </p>
       </div>
       {status === "done" ? (
         <span className="flex items-center gap-1 rounded-lg bg-success/15 px-3 py-1.5 text-xs font-semibold text-success">

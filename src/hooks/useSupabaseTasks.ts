@@ -25,6 +25,7 @@ type TaskRow = {
   points: number;
   status: string;
   sort_order: number;
+  task_reward?: number | null;
 };
 
 /** Brand colors already defined for each platform in the static data. */
@@ -66,7 +67,7 @@ export function useSupabaseTasks() {
         const { data, error: err } = await Promise.race([
           supabase
             .from("tasks")
-            .select("id, platform, title, url, points, status, sort_order")
+            .select("id, platform, title, url, points, status, sort_order, task_reward")
             .eq("status", "active")
             .order("platform", { ascending: true })
             .order("sort_order", { ascending: true }),
@@ -87,7 +88,7 @@ export function useSupabaseTasks() {
         console.log("[useSupabaseTasks] data received:", data?.length, "tasks");
 
         const byPlatform = new Map<string, SocialTask[]>();
-        for (const row of (data ?? []) as TaskRow[]) {
+        for (const row of (data ?? []) as unknown as TaskRow[]) {
           const label = PLATFORM_LABELS[row.platform] ?? row.platform;
           const chat = telegramChat(row.url);
           const task: SocialTask = {
@@ -96,6 +97,7 @@ export function useSupabaseTasks() {
             label: row.title,
             points: row.points,
             url: row.url,
+            taskReward: row.task_reward ?? 0,
             ...(row.platform === "telegram" && chat ? { verifyChat: chat } : {}),
           };
           const list = byPlatform.get(label) ?? [];
