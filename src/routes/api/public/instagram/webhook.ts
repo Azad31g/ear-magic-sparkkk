@@ -110,18 +110,111 @@ export const Route = createFileRoute("/api/public/instagram/webhook")({
               error: profile.error?.message ?? "unknown_error",
               senderId,
             });
-          } else {
-            console.log("[instagram-webhook] TEST RESULT", {
-              username: profile.username,
-              instagramScopedId: senderId,
-              is_user_follow_business: profile.is_user_follow_business,
-              is_business_follow_user: profile.is_business_follow_user,
-              follower_count: profile.follower_count,
-            });
+            return new Response("EVENT_RECEIVED", { status: 200 });
           }
+
+          const follows = profile.is_user_follow_business === true;
+          console.log("[instagram-webhook] TEST RESULT", {
+            username: profile.username,
+            instagramScopedId: senderId,
+            is_user_follow_business: profile.is_user_follow_business,
+          });
+
+          const { getExternalSupabaseAdmin } = await import(
+            "@/integrations/external-supabase/admin.server"
+          );
+          const supabase = getExternalSupabaseAdmin();
+          const nowIso = new Date().toISOString();
+
+          // 1. Resolve the Telegram user: existing link first, otherwise the
+          //    newest still-pending Instagram verification session.
+          const { data: link } = await supabase
+            .from("instagram_links")
+            .select("telegram_user_id")
+            .eq("instagram_scoped_id", senderId)
+            .maybeSingle();
+
+          const { data: session } = await supabase
+            .from("verification_sessions")
+            .select("session_id, telegram_user_id, task_id")
+            .eq("platform", "instagram")
+            .eq("status", "pending")
+            .gt("expires_at", nowIso)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          const linkedTelegramId = link?.telegram_user_id as number | undefined;
+
+          if (!session && !linkedTelegramId) {
+            console.warn("[instagram-webhook] no pending session for sender", senderId);
+            return new Response("EVENT_RECEIVED", { status: 200 });
+          }
+
+          // 9. One Instagram account -> exactly one Telegram account.
+          if (
+            session &&
+            linkedTelegramId &&
+            linkedTelegramId !== session.telegram_user_id
+          ) {
+            await supabase
+              .from("verification_sessions")
+              .update({ status: "rejected", completed_at: nowIso })
+              .eq("session_id", session.session_id);
+            console.warn("[instagram-webhook] scoped id already linked to another telegram user", {
+              senderId,
+            });
+            return new Response("EVENT_RECEIVED", { status: 200 });
+          }
+
+          const telegramUserId = session?.telegram_user_id ?? linkedTelegramId!;
+          const taskId = session?.task_id ?? null;
+
+          await supabase.from("instagram_links").upsert(
+            {
+              instagram_scoped_id: senderId,
+              telegram_user_id: telegramUserId,
+              instagram_username: profile.username ?? null,
+              linked_at: nowIso,
+            },
+            { onConflict: "instagram_scoped_id" },
+          );
+
+          if (taskId) {
+            await supabase.from("instagram_verifications").upsert(
+              {
+                telegram_user_id: telegramUserId,
+                task_id: taskId,
+                instagram_scoped_id: senderId,
+                instagram_username: profile.username ?? null,
+                status: follows ? "verified" : "failed",
+                verified_at: follows ? nowIso : null,
+                last_checked_at: nowIso,
+              },
+              { onConflict: "telegram_user_id,task_id", ignoreDuplicates: false },
+            );
+          }
+
+          if (session) {
+            await supabase
+              .from("verification_sessions")
+              .update({
+                status: follows ? "verified" : "failed",
+                instagram_scoped_id: senderId,
+                completed_at: nowIso,
+              })
+              .eq("session_id", session.session_id);
+          }
+
+          console.log("[instagram-webhook] verification complete", {
+            telegramUserId,
+            taskId,
+            follows,
+          });
         } catch (error) {
           console.error("[instagram-webhook] profile request threw", error);
         }
+
 
         return new Response("EVENT_RECEIVED", { status: 200 });
       },
