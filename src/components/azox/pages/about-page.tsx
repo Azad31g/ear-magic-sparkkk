@@ -180,7 +180,7 @@ export function AboutPage() {
           itself.
         </p>
 
-        <div className="mt-5 flex gap-3 overflow-x-auto pb-1">
+        <div className="mt-5 flex flex-wrap gap-3 pb-1">
           {FOUNDER_SOCIALS.map((item) => (
             <a
               key={item.name}
