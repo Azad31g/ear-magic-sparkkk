@@ -87,18 +87,16 @@ export function AnnouncementsPage() {
                 <button
                   type="button"
                   onClick={() => openAnnouncement(a)}
-                  className="relative flex w-full items-center gap-3 overflow-hidden rounded-xl border border-border bg-card/70 py-2.5 pl-4 pr-3 text-left transition-colors duration-150 hover:bg-card active:scale-[0.99] active:bg-secondary"
+                  className="relative w-full overflow-hidden rounded-3xl border border-border bg-card/70 py-3 pl-5 pr-4 text-left transition-colors duration-150 hover:bg-card active:scale-[0.99] active:bg-secondary"
                 >
                   <span
-                    className="absolute left-1.5 top-2 bottom-2 w-[3px] rounded-full bg-[#ff7a18]"
+                    className="pointer-events-none absolute inset-y-0 left-0 w-6 rounded-l-3xl border-l-[3px] border-y-[3px] border-[#ff7a18]"
+                    style={{ borderRight: "none", maskImage: "linear-gradient(to right, black 40%, transparent 100%)", WebkitMaskImage: "linear-gradient(to right, black 40%, transparent 100%)" }}
                     aria-hidden="true"
                   />
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-secondary">
-                    <Megaphone className="size-4 text-gold" aria-hidden="true" />
-                  </span>
-                  <span className="min-w-0 flex-1">
+                  <span className="relative block min-w-0">
                     <span className="flex items-center gap-2">
-                      <span className="truncate text-[13px] font-bold leading-tight text-foreground">
+                      <span className="truncate text-[14px] font-bold leading-tight text-foreground">
                         {a.title}
                       </span>
                       {unread && (
@@ -108,15 +106,16 @@ export function AnnouncementsPage() {
                         />
                       )}
                     </span>
-                    <span className="mt-0.5 block truncate text-[11px] leading-tight text-muted-foreground">
+                    <span className="mt-1 block truncate text-[12px] leading-tight text-muted-foreground">
                       {a.message}
                     </span>
-                    <span className="mt-0.5 block text-[10px] leading-tight text-muted-foreground/60">
+                    <span className="mt-1.5 block text-[11px] leading-tight text-muted-foreground/60">
                       {formatStamp(a.created_at)}
                     </span>
                   </span>
                 </button>
               </li>
+
             );
           })}
         </ul>
