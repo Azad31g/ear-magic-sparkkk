@@ -69,8 +69,13 @@ export const startInstagramVerification = createServerFn({ method: "POST" })
         .select("session_id, expires_at, verification_code")
         .single();
 
-      if (!result.error) {
-        session = result.data as typeof session;
+      if (!result.error && result.data) {
+        const insertedSession = result.data as {
+          session_id: string;
+          expires_at: string;
+          verification_code: string;
+        };
+        session = insertedSession;
         insertError = null;
         break;
       }
