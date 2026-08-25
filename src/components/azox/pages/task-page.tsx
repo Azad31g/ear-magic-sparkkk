@@ -57,7 +57,7 @@ function TaskRow({ task, color }: { task: SocialTask; color: string }) {
   };
 
   const handleClaim = () => {
-    completeTask(task.id, task.points);
+    completeTask(task.id, task.points, task.taskReward ?? 0);
     setState("done");
     toast.success(`+${task.points} points added`);
   };

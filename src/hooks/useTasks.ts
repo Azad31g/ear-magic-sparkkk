@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { STORAGE_KEYS, readStorage, todayKey, writeStorage } from "@/lib/points";
-import { SOCIAL_TASKS } from "@/lib/azox-data";
 
 export const DAILY_GIFT_POINTS = 200;
 
@@ -33,18 +32,23 @@ export function useTasks(onEarn?: (amount: number) => void) {
   );
 
   const completeTask = useCallback(
-    (id: string, fallbackPoints?: number) => {
+    (id: string, fallbackPoints?: number, taskReward?: number) => {
       if (state.completed.includes(id)) return 0;
-      const points =
-        SOCIAL_TASKS.flatMap((g) => g.tasks).find((t) => t.id === id)?.points ??
-        fallbackPoints ??
-        0;
+      const points = fallbackPoints ?? 0;
       setState((prev) =>
         prev.completed.includes(id)
           ? prev
           : { ...prev, completed: [...prev.completed, id] },
       );
       if (points > 0) onEarn?.(points);
+      // Award task_reward tasks
+      if (taskReward && taskReward > 0) {
+        const gameTasksState = readStorage<{ tasksDone: number }>(
+          "azox_game_tasks", { tasksDone: 0 }
+        );
+        gameTasksState.tasksDone += taskReward;
+        writeStorage("azox_game_tasks", gameTasksState);
+      }
       return points;
     },
     [onEarn, state.completed],
@@ -65,7 +69,6 @@ export function useTasks(onEarn?: (amount: number) => void) {
   }, [onEarn]);
 
   return {
-    groups: SOCIAL_TASKS,
     completedTasks,
     completeTask,
     isCompleted: (id: string) => completedTasks.has(id),
