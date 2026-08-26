@@ -56,15 +56,19 @@ function fromTelegram(tg: TelegramUser, joinedAt: string): AzoxUser {
 }
 
 function fromDb(row: DbUser, fallback: AzoxUser): AzoxUser {
-  const name =
-    [row.first_name, row.last_name].filter(Boolean).join(" ") ||
-    row.username ||
-    fallback.name;
+  // Live Telegram data (the fallback) always wins over stored values.
+  const live = fallback.isTelegram;
+  const name = live
+    ? fallback.name
+    : [row.first_name, row.last_name].filter(Boolean).join(" ") ||
+      row.username ||
+      fallback.name;
   return {
     ...fallback,
     id: String(row.telegram_id),
     name,
-    username: row.username ?? fallback.username,
+    username: (live ? fallback.username : null) ?? row.username ?? fallback.username,
+    photoUrl: fallback.photoUrl ?? row.photo_url ?? null,
     initials: initialsOf(name),
     isTelegram: true,
     joinedAt: row.joined_at ? row.joined_at.slice(0, 10) : fallback.joinedAt,
