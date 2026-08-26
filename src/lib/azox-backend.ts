@@ -36,6 +36,7 @@ export function currentTelegramId(): number | null {
 
 /** Upserts the Telegram user then returns the fresh row. Null outside Telegram. */
 export async function syncTelegramUser(): Promise<DbUser | null> {
+  console.log("[azox-backend] Supabase URL:", (supabase as any).supabaseUrl ?? "unknown");
   const tg = getTelegramUser();
   console.log("[azox-backend] tg user from Telegram:", tg);
   if (!tg) return null;
