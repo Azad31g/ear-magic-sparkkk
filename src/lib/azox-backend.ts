@@ -36,6 +36,7 @@ export function currentTelegramId(): number | null {
 /** Upserts the Telegram user then returns the fresh row. Null outside Telegram. */
 export async function syncTelegramUser(): Promise<DbUser | null> {
   const tg = getTelegramUser();
+  console.log("[azox-backend] tg user from Telegram:", tg);
   if (!tg) return null;
   try {
     const { data: rpcData, error: rpcError } = await db.rpc("upsert_user", {
