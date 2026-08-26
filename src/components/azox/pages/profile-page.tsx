@@ -61,14 +61,15 @@ export function ProfilePage() {
       {/* Identity */}
       <section className="glass glow-purple flex items-center gap-3 rounded-2xl p-4">
         <Avatar className="size-14 border border-accent/40">
+          {displayPhoto && <AvatarImage src={displayPhoto} alt={displayName} />}
           <AvatarFallback className="bg-accent/15 text-lg font-bold text-accent">
             {user.initials}
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
-          <p className="text-base font-bold">{user.name}</p>
+          <p className="text-base font-bold">{displayName}</p>
           <p className="text-xs text-muted-foreground">
-            @{user.username} · joined {user.joinedAt}
+            {displayUsername} · joined {user.joinedAt}
           </p>
         </div>
         <span
