@@ -10,6 +10,7 @@ export type TelegramUser = {
 type TelegramWebApp = {
   ready: () => void;
   expand: () => void;
+  initData?: string;
   initDataUnsafe?: { user?: TelegramUser; start_param?: string };
   setHeaderColor?: (color: string) => void;
   setBackgroundColor?: (color: string) => void;
