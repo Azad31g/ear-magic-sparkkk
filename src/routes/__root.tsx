@@ -146,11 +146,6 @@ export const Route = createRootRoute({
       },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
     ],
-    scripts: [
-      {
-        src: "https://telegram.org/js/telegram-web-app.js",
-      },
-    ],
   }),
 
   shellComponent: RootShell,
@@ -163,6 +158,7 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
+        <script src="https://telegram.org/js/telegram-web-app.js" />
         <HeadContent />
       </head>
       <body>
