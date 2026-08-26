@@ -17,6 +17,7 @@ export type DbUser = {
   referral_code: string | null;
   referred_by: number | null;
   referral_count: number;
+  photo_url: string | null;
   rank: string | null;
   joined_at: string | null;
   last_seen: string | null;
