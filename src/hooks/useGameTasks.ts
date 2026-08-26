@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { readStorage, writeStorage } from "@/lib/points";
+import { saveGameScore } from "@/lib/azox-backend";
 
 const STORAGE_KEY = "azox_game_tasks";
 const STREAK_KEY = "azox_daily_streak";
@@ -71,6 +72,7 @@ export function useGameTasks() {
   // Shoot / Snake / TakBom — +10 Tasks on new best score (game validates the record)
   const onNewGlobalBest = useCallback((gameId: string, newScore: number) => {
     if (newScore <= 0) return 0;
+    void saveGameScore(gameId, newScore);
     const state = loadState();
     state.tasksDone += 10;
     saveState(state);
