@@ -30,6 +30,18 @@ export function usePoints() {
       globalWins: typeof stored.globalWins === "number" ? stored.globalWins : 0,
     });
     setHydrated(true);
+
+    // Inside Telegram the server is the source of truth.
+    const telegramId = currentTelegramId();
+    if (!telegramId) return;
+    let cancelled = false;
+    void fetchUser(telegramId).then((row) => {
+      if (cancelled || !row || typeof row.points !== "number") return;
+      setState((prev) => ({ ...prev, points: row.points }));
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -38,11 +50,17 @@ export function usePoints() {
   }, [state, hydrated]);
 
   const addPoints = useCallback((amount: number) => {
+    // Optimistic local update, then reconcile with the server total.
     setState((prev) => ({
       ...prev,
       points: Math.max(0, prev.points + amount),
       taps: amount > 0 ? prev.taps + 1 : prev.taps,
     }));
+    void addPointsRemote(amount).then((total) => {
+      if (typeof total === "number") {
+        setState((prev) => ({ ...prev, points: total }));
+      }
+    });
   }, []);
 
   const addGlobalWin = useCallback(() => {
