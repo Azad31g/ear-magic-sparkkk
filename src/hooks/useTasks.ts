@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { STORAGE_KEYS, readStorage, todayKey, writeStorage } from "@/lib/points";
+import { recordTaskCompletion } from "@/lib/azox-backend";
 
 export const DAILY_GIFT_POINTS = 200;
 
