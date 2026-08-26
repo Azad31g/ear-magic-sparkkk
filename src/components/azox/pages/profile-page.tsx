@@ -15,6 +15,12 @@ export function ProfilePage() {
   const { user, dbUser, points, rank, completedTasks, referrals } = useAzox();
   const { getGameTasksDone } = useGameTasks();
   const [copied, setCopied] = useState(false);
+  const tgUser = getTelegramUser();
+  const displayName = tgUser
+    ? [tgUser.first_name, tgUser.last_name].filter(Boolean).join(" ") || tgUser.username || "AZOX Player"
+    : user.name;
+  const displayUsername = tgUser?.username ? `@${tgUser.username}` : `@${user.username}`;
+  const displayPhoto = tgUser?.photo_url ?? user.photoUrl;
   const referral = dbUser
     ? referralLinkFor(dbUser.referral_code ?? user.username)
     : user.referralLink;
