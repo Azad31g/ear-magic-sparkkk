@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { STORAGE_KEYS, readStorage, writeStorage } from "@/lib/points";
 import { initTelegram, type TelegramUser } from "@/lib/telegram";
+import {
+  referralLinkFor,
+  syncTelegramUser,
+  fetchUser,
+  type DbUser,
+} from "@/lib/azox-backend";
 
 export type AzoxUser = {
   id: string;
@@ -21,7 +27,7 @@ const GUEST: AzoxUser = {
   photoUrl: null,
   isTelegram: false,
   joinedAt: new Date().toISOString().slice(0, 10),
-  referralLink: "https://t.me/AZOX_bot?start=azox_player",
+  referralLink: referralLinkFor("azox_player"),
 };
 
 function initialsOf(name: string): string {
@@ -45,23 +51,66 @@ function fromTelegram(tg: TelegramUser, joinedAt: string): AzoxUser {
     photoUrl: tg.photo_url ?? null,
     isTelegram: true,
     joinedAt,
-    referralLink: `https://t.me/AZOX_bot?start=${username}`,
+    referralLink: referralLinkFor(username),
+  };
+}
+
+function fromDb(row: DbUser, fallback: AzoxUser): AzoxUser {
+  const name =
+    [row.first_name, row.last_name].filter(Boolean).join(" ") ||
+    row.username ||
+    fallback.name;
+  return {
+    ...fallback,
+    id: String(row.telegram_id),
+    name,
+    username: row.username ?? fallback.username,
+    initials: initialsOf(name),
+    isTelegram: true,
+    joinedAt: row.joined_at ? row.joined_at.slice(0, 10) : fallback.joinedAt,
+    referralLink: referralLinkFor(row.referral_code ?? row.username),
   };
 }
 
 export function useUser() {
   const [user, setUser] = useState<AzoxUser>(GUEST);
+  const [dbUser, setDbUser] = useState<DbUser | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     const stored = readStorage<AzoxUser | null>(STORAGE_KEYS.user, null);
     const joinedAt = stored?.joinedAt ?? new Date().toISOString().slice(0, 10);
     const tg = initTelegram();
-    const next = tg ? fromTelegram(tg, joinedAt) : (stored ?? { ...GUEST, joinedAt });
-    setUser(next);
-    writeStorage(STORAGE_KEYS.user, next);
+    const local = tg
+      ? fromTelegram(tg, joinedAt)
+      : (stored ?? { ...GUEST, joinedAt });
+    setUser(local);
+    writeStorage(STORAGE_KEYS.user, local);
     setReady(true);
+
+    if (!tg) return;
+
+    // Telegram session: sync with the backend and prefer server data.
+    void syncTelegramUser().then((row) => {
+      if (cancelled || !row) return;
+      setDbUser(row);
+      const merged = fromDb(row, local);
+      setUser(merged);
+      writeStorage(STORAGE_KEYS.user, merged);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  const refreshDbUser = useCallback(async () => {
+    if (!dbUser) return null;
+    const row = await fetchUser(dbUser.telegram_id);
+    if (row) setDbUser(row);
+    return row;
+  }, [dbUser]);
 
   const updateUser = useCallback((patch: Partial<AzoxUser>) => {
     setUser((prev) => {
@@ -71,5 +120,5 @@ export function useUser() {
     });
   }, []);
 
-  return { user, ready, updateUser };
+  return { user, dbUser, ready, updateUser, refreshDbUser };
 }
