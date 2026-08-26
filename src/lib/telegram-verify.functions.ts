@@ -15,7 +15,8 @@ export const verifyTelegramMembership = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const token = process.env["TELEGRAM_BOT_TOKEN"];
     if (!token) {
-      return { ok: false as const, member: false, error: "not_configured" };
+      // No bot token configured — use honor system (trust user opened the link)
+      return { ok: true as const, member: true, status: "honor_system" };
     }
 
     try {

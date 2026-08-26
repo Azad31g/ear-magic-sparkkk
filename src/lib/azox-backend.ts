@@ -38,13 +38,15 @@ export async function syncTelegramUser(): Promise<DbUser | null> {
   const tg = getTelegramUser();
   if (!tg) return null;
   try {
-    await db.rpc("upsert_user", {
+    const { data: rpcData, error: rpcError } = await db.rpc("upsert_user", {
       p_telegram_id: tg.id,
       p_username: tg.username ?? null,
       p_first_name: tg.first_name ?? null,
       p_last_name: tg.last_name ?? null,
       p_referral_code: getStartParam() || null,
     });
+    if (rpcError) console.error("[azox-backend] upsert_user RPC error:", rpcError);
+    else console.log("[azox-backend] upsert_user success:", rpcData);
   } catch (e) {
     console.error("[azox-backend] upsert_user failed", e);
   }
