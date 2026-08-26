@@ -2,13 +2,14 @@ import { useState } from "react";
 import { Copy, Check, Users, Coins, Zap, Trophy, ChevronRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { useAzox } from "@/components/azox/app-provider";
 import { AzoxFooter } from "@/components/azox/footer";
 import { useGameTasks } from "@/hooks/useGameTasks";
 import { RANKS, formatPoints, nextRank as getNextRank } from "@/lib/azox-data";
 import { referralLinkFor } from "@/lib/azox-backend";
+import { getTelegramUser } from "@/lib/telegram";
 
 export function ProfilePage() {
   const { user, dbUser, points, rank, completedTasks, referrals } = useAzox();
