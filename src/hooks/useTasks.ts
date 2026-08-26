@@ -41,7 +41,9 @@ export function useTasks(onEarn?: (amount: number) => void) {
           ? prev
           : { ...prev, completed: [...prev.completed, id] },
       );
+      // onEarn already awards points on the server through usePoints.
       if (points > 0) onEarn?.(points);
+      void recordTaskCompletion(id, 0);
       // Award task_reward tasks
       if (taskReward && taskReward > 0) {
         const gameTasksState = readStorage<{ tasksDone: number }>(
