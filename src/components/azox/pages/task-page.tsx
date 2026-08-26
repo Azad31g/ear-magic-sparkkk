@@ -12,7 +12,6 @@ import {
   Loader2,
   ShieldCheck,
 } from "lucide-react";
-import { SiThreads } from "react-icons/si";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
@@ -24,12 +23,20 @@ import { type SocialTask, type SocialTaskGroup } from "@/lib/azox-data";
 import { AzoxFooter } from "@/components/azox/footer";
 import { cn } from "@/lib/utils";
 
+function ThreadsEmojiIcon(props: React.HTMLAttributes<HTMLSpanElement>) {
+  return (
+    <span {...props} role="img" aria-label="Threads">
+      🧵
+    </span>
+  );
+}
+
 const PLATFORM_ICONS: Record<string, typeof Send> = {
   Telegram: Send,
   "X (Twitter)": Twitter,
   Instagram: Instagram,
   TikTok: Music2,
-  Threads: SiThreads as unknown as typeof Send,
+  Threads: ThreadsEmojiIcon as unknown as typeof Send,
   YouTube: Youtube,
   Discord: MessagesSquare,
 };
@@ -43,6 +50,13 @@ const TASK_ORDER = [
   "YouTube",
   "Discord",
 ];
+
+const SECTION_STYLES: Record<
+  string,
+  { color: string; textColor: string; label: string }
+> = {
+  Threads: { color: "#000000", textColor: "#FFFFFF", label: "Threads" },
+};
 
 
 function TaskRow({ task, color }: { task: SocialTask; color: string }) {
@@ -147,6 +161,8 @@ function TaskRow({ task, color }: { task: SocialTask; color: string }) {
 function TaskGroup({ group }: { group: SocialTaskGroup }) {
   const Icon = PLATFORM_ICONS[group.platform] ?? Send;
   const iconColor = group.accent ?? group.color;
+  const sectionStyle = SECTION_STYLES[group.platform];
+  const textColor = sectionStyle?.textColor ?? iconColor;
 
   return (
     <section className="flex flex-col gap-2">
@@ -156,11 +172,13 @@ function TaskGroup({ group }: { group: SocialTaskGroup }) {
       >
         <span
           className="flex size-7 items-center justify-center rounded-lg"
-          style={{ backgroundColor: `${iconColor}26`, color: iconColor }}
+          style={{ backgroundColor: `${iconColor}26`, color: textColor }}
         >
           <Icon className="size-4" aria-hidden="true" />
         </span>
-        <h2 className="text-sm font-bold">{group.platform}</h2>
+        <h2 className="text-sm font-bold">
+          {sectionStyle?.label ?? group.platform}
+        </h2>
       </div>
       <div className="flex flex-col gap-2">
         {group.tasks.map((t) => (

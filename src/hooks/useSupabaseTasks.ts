@@ -18,9 +18,18 @@ export const PLATFORM_LABELS: Record<string, string> = {
   discord: "Discord",
 };
 
+type Platform =
+  | "telegram"
+  | "instagram"
+  | "tiktok"
+  | "threads"
+  | "x"
+  | "youtube"
+  | "discord";
+
 type TaskRow = {
   id: string;
-  platform: string;
+  platform: Platform;
   title: string;
   url: string;
   points: number;
