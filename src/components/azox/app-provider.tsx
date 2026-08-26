@@ -7,11 +7,13 @@ import {
 import { usePoints } from "@/hooks/usePoints";
 import { useTasks } from "@/hooks/useTasks";
 import { useUser, type AzoxUser } from "@/hooks/useUser";
+import type { DbUser } from "@/lib/azox-backend";
 import { useBoxAlert } from "@/hooks/useBoxAlert";
 import type { Rank } from "@/lib/azox-data";
 
 type AzoxState = {
   user: AzoxUser;
+  dbUser: DbUser | null;
   points: number;
   rank: Rank;
   nextRank: Rank | null;
@@ -33,7 +35,7 @@ type AzoxState = {
 const AzoxContext = createContext<AzoxState | null>(null);
 
 export function AzoxProvider({ children }: { children: ReactNode }) {
-  const { user } = useUser();
+  const { user, dbUser } = useUser();
   const {
     points,
     rank,
@@ -51,6 +53,7 @@ export function AzoxProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AzoxState>(
     () => ({
       user,
+      dbUser,
       points,
       rank,
       nextRank,
@@ -63,13 +66,14 @@ export function AzoxProvider({ children }: { children: ReactNode }) {
       dailyClaimed,
       claimDaily,
       globalWins,
-      referrals: 0,
+      referrals: dbUser?.referral_count ?? 0,
       isBoxOpen: boxAlert.isBoxOpen,
       boxSecondsRemaining: boxAlert.secondsRemaining,
       boxAlreadyOpened: boxAlert.alreadyOpened,
     }),
     [
       user,
+      dbUser,
       points,
       rank,
       nextRank,
