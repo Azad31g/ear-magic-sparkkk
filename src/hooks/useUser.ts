@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { STORAGE_KEYS, readStorage, writeStorage } from "@/lib/points";
-import { initTelegram, type TelegramUser } from "@/lib/telegram";
+import { getTelegramUser, initTelegram, type TelegramUser } from "@/lib/telegram";
 import {
   referralLinkFor,
   syncTelegramUser,
@@ -83,26 +83,47 @@ export function useUser() {
 
   useEffect(() => {
     let cancelled = false;
-    const stored = readStorage<AzoxUser | null>(STORAGE_KEYS.user, null);
-    const joinedAt = stored?.joinedAt ?? new Date().toISOString().slice(0, 10);
-    const tg = initTelegram();
-    const local = tg
-      ? fromTelegram(tg, joinedAt)
-      : (stored ?? { ...GUEST, joinedAt });
-    setUser(local);
-    writeStorage(STORAGE_KEYS.user, local);
-    setReady(true);
 
-    if (!tg) return;
+    // Step 1: Try to get Telegram user IMMEDIATELY (synchronous)
+    const tgUser = getTelegramUser();
 
-    // Telegram session: sync with the backend and prefer server data.
-    void syncTelegramUser().then((row) => {
-      if (cancelled || !row) return;
-      setDbUser(row);
-      const merged = fromDb(row, local);
-      setUser(merged);
-      writeStorage(STORAGE_KEYS.user, merged);
-    });
+    if (tgUser) {
+      // We have real Telegram data - use it immediately, no fallback
+      const stored = readStorage<AzoxUser | null>(STORAGE_KEYS.user, null);
+      const joinedAt = stored?.joinedAt ?? new Date().toISOString().slice(0, 10);
+      const local = fromTelegram(tgUser, joinedAt);
+      setUser(local);
+      writeStorage(STORAGE_KEYS.user, local);
+      setReady(true);
+
+      // Step 2: Sync with Supabase in background
+      void syncTelegramUser().then((row) => {
+        if (cancelled || !row) return;
+        setDbUser(row);
+        // Merge but keep live Telegram data for display
+        const merged = {
+          ...fromDb(row, local),
+          // Always prefer live Telegram data for display
+          name: local.name,
+          username: local.username,
+          initials: local.initials,
+          photoUrl: tgUser.photo_url ?? row.photo_url ?? null,
+          isTelegram: true,
+        };
+        setUser(merged);
+        writeStorage(STORAGE_KEYS.user, merged);
+      });
+    } else {
+      // No Telegram - use stored or guest
+      const stored = readStorage<AzoxUser | null>(STORAGE_KEYS.user, null);
+      const joinedAt = stored?.joinedAt ?? new Date().toISOString().slice(0, 10);
+      const local = stored ?? { ...GUEST, joinedAt };
+      setUser(local);
+      setReady(true);
+    }
+
+    // Step 3: Initialize Telegram WebApp
+    initTelegram();
 
     return () => {
       cancelled = true;
