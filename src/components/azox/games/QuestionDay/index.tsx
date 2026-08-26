@@ -78,11 +78,13 @@ const LETTERS = ["A", "B", "C", "D", "E"];
 
 export default function QuestionDay() {
   const { points: accountPoints, addPoints } = useAzox();
+  const { onQuestionComplete } = useGameTasks();
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(SECONDS_PER_QUESTION);
   const [done, setDone] = useState(false);
+  const completedRef = useRef(false);
 
   const current = SAMPLE_QUESTIONS[index] ?? SAMPLE_QUESTIONS[0]!;
 
