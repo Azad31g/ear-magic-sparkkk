@@ -146,6 +146,11 @@ export const Route = createRootRoute({
       },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
     ],
+    scripts: [
+      {
+        src: "https://telegram.org/js/telegram-web-app.js",
+      },
+    ],
   }),
 
   shellComponent: RootShell,
