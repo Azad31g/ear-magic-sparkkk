@@ -84,8 +84,9 @@ function TaskRow({ task, color }: { task: SocialTask; color: string }) {
   };
 
   const handleVerify = async () => {
-    const telegramId = Number(user.id);
-    if (!user.isTelegram || !Number.isFinite(telegramId)) {
+    const tgUser = getTelegramUser();
+    const telegramId = tgUser?.id ?? Number(user.id);
+    if (!isTelegram() || !telegramId) {
       toast.error("Open the app inside Telegram to verify membership");
       return;
     }
