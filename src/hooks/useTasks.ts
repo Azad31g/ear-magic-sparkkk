@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { STORAGE_KEYS, readStorage, todayKey, writeStorage } from "@/lib/points";
+import { recordTaskCompletion } from "@/lib/azox-backend";
 
 export const DAILY_GIFT_POINTS = 200;
 
@@ -40,7 +41,9 @@ export function useTasks(onEarn?: (amount: number) => void) {
           ? prev
           : { ...prev, completed: [...prev.completed, id] },
       );
+      // onEarn already awards points on the server through usePoints.
       if (points > 0) onEarn?.(points);
+      void recordTaskCompletion(id, 0);
       // Award task_reward tasks
       if (taskReward && taskReward > 0) {
         const gameTasksState = readStorage<{ tasksDone: number }>(

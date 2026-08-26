@@ -8,12 +8,19 @@ import { useAzox } from "@/components/azox/app-provider";
 import { AzoxFooter } from "@/components/azox/footer";
 import { useGameTasks } from "@/hooks/useGameTasks";
 import { RANKS, formatPoints, nextRank as getNextRank } from "@/lib/azox-data";
+import { referralLinkFor } from "@/lib/azox-backend";
 
 export function ProfilePage() {
-  const { user, points, rank, completedTasks, referrals } = useAzox();
+  const { user, dbUser, points, rank, completedTasks, referrals } = useAzox();
   const { getGameTasksDone } = useGameTasks();
   const [copied, setCopied] = useState(false);
-  const referral = user.referralLink;
+  const referral = dbUser
+    ? referralLinkFor(dbUser.referral_code ?? user.username)
+    : user.referralLink;
+  const tasksDone = dbUser
+    ? dbUser.tasks_done
+    : completedTasks.size + getGameTasksDone();
+  const rankLabel = dbUser?.rank ?? rank.key;
   const nextRank = getNextRank(points);
 
   const progress = nextRank
@@ -37,8 +44,8 @@ export function ProfilePage() {
 
   const stats = [
     { label: "Total Points", value: formatPoints(points), icon: Coins },
-    { label: "Current Rank", value: rank.key, icon: Trophy },
-    { label: "Tasks Done", value: String(completedTasks.size + getGameTasksDone()), icon: Zap },
+    { label: "Current Rank", value: rankLabel, icon: Trophy },
+    { label: "Tasks Done", value: String(tasksDone), icon: Zap },
     { label: "Referrals", value: String(referrals), icon: Users },
   ];
 
