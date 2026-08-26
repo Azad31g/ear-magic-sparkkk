@@ -29,11 +29,37 @@ export function getWebApp(): TelegramWebApp | null {
 }
 
 export function isTelegram(): boolean {
-  return Boolean(getWebApp()?.initDataUnsafe?.user);
+  if (typeof window === "undefined") return false;
+  const hasWebApp = Boolean(window.Telegram?.WebApp);
+  const hasInitData = Boolean(window.Telegram?.WebApp?.initData);
+  const hasUser = Boolean(window.Telegram?.WebApp?.initDataUnsafe?.user);
+  console.log("[telegram] isTelegram check:", { hasWebApp, hasInitData, hasUser });
+  return hasWebApp && (hasInitData || hasUser);
 }
 
 export function getTelegramUser(): TelegramUser | null {
-  return getWebApp()?.initDataUnsafe?.user ?? null;
+  if (typeof window === "undefined") return null;
+
+  // Method 1: standard initDataUnsafe
+  const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
+  if (user && user.id) return user;
+
+  // Method 2: parse initData string manually
+  try {
+    const initData = window.Telegram?.WebApp?.initData;
+    if (initData) {
+      const params = new URLSearchParams(initData);
+      const userStr = params.get("user");
+      if (userStr) {
+        const parsed = JSON.parse(decodeURIComponent(userStr));
+        if (parsed?.id) return parsed;
+      }
+    }
+  } catch {
+    // ignore parse errors
+  }
+
+  return null;
 }
 
 export function getStartParam(): string | null {
