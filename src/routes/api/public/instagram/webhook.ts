@@ -74,6 +74,28 @@ export const Route = createFileRoute("/api/public/instagram/webhook")({
           }>;
         };
 
+        // TEMPORARY DIAGNOSTIC: log the payload *shape* only (keys + value
+        // types), never raw text, tokens, or personal data.
+        const shapeOf = (value: unknown, depth = 0): unknown => {
+          if (value === null) return "null";
+          if (Array.isArray(value))
+            return value.length ? [shapeOf(value[0], depth + 1)] : [];
+          if (typeof value === "object") {
+            if (depth > 5) return "object";
+            return Object.fromEntries(
+              Object.entries(value as Record<string, unknown>).map(([k, v]) => [
+                k,
+                shapeOf(v, depth + 1),
+              ]),
+            );
+          }
+          return typeof value;
+        };
+        console.log(
+          "[instagram-webhook] payload shape",
+          JSON.stringify(shapeOf(payload)),
+        );
+
         const entry = body.entry?.[0];
         const messaging = entry?.messaging?.[0];
         const professionalAccountId = entry?.id;
