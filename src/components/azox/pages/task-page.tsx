@@ -12,6 +12,7 @@ import {
   Loader2,
   ShieldCheck,
 } from "lucide-react";
+import { SiThreads } from "react-icons/si";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ const PLATFORM_ICONS: Record<string, typeof Send> = {
   "X (Twitter)": Twitter,
   Instagram: Instagram,
   TikTok: Music2,
+  Threads: SiThreads as unknown as typeof Send,
   YouTube: Youtube,
   Discord: MessagesSquare,
 };
@@ -36,6 +38,7 @@ const TASK_ORDER = [
   "Telegram",
   "Instagram",
   "TikTok",
+  "Threads",
   "X (Twitter)",
   "YouTube",
   "Discord",

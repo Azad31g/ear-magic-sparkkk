@@ -12,6 +12,7 @@ export const PLATFORM_LABELS: Record<string, string> = {
   telegram: "Telegram",
   instagram: "Instagram",
   tiktok: "TikTok",
+  threads: "Threads",
   x: "X (Twitter)",
   youtube: "YouTube",
   discord: "Discord",
