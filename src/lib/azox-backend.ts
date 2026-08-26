@@ -17,6 +17,7 @@ export type DbUser = {
   referral_code: string | null;
   referred_by: number | null;
   referral_count: number;
+  photo_url: string | null;
   rank: string | null;
   joined_at: string | null;
   last_seen: string | null;
@@ -38,14 +39,24 @@ export async function syncTelegramUser(): Promise<DbUser | null> {
   const tg = getTelegramUser();
   console.log("[azox-backend] tg user from Telegram:", tg);
   if (!tg) return null;
+  const base = {
+    p_telegram_id: tg.id,
+    p_username: tg.username ?? null,
+    p_first_name: tg.first_name ?? null,
+    p_last_name: tg.last_name ?? null,
+    p_referral_code: getStartParam() || null,
+  };
   try {
-    const { data: rpcData, error: rpcError } = await db.rpc("upsert_user", {
-      p_telegram_id: tg.id,
-      p_username: tg.username ?? null,
-      p_first_name: tg.first_name ?? null,
-      p_last_name: tg.last_name ?? null,
-      p_referral_code: getStartParam() || null,
+    // Preferred: the overload that also stores the Telegram avatar.
+    let { data: rpcData, error: rpcError } = await db.rpc("upsert_user", {
+      ...base,
+      p_photo_url: tg.photo_url ?? null,
     });
+    if (rpcError) {
+      // Older database without the p_photo_url overload — retry without it.
+      console.warn("[azox-backend] upsert_user with photo_url failed:", rpcError);
+      ({ data: rpcData, error: rpcError } = await db.rpc("upsert_user", base));
+    }
     if (rpcError) console.error("[azox-backend] upsert_user RPC error:", rpcError);
     else console.log("[azox-backend] upsert_user success:", rpcData);
   } catch (e) {
