@@ -9,6 +9,7 @@ import {
   LEADERBOARD_REFERRALS,
 } from "@/lib/azox-data";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
+import { useSupabaseLeaderboard } from "@/hooks/useSupabaseLeaderboard";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 type LeaderboardTab = "points" | "tasks" | "referrals";
@@ -24,7 +25,17 @@ export function LeaderboardPage() {
     thresholdFor,
     colorFor: rankColor,
   } = useLeaderboard(activeRank);
+  const live = useSupabaseLeaderboard();
   const activeThreshold = thresholdFor(activeRank);
+
+  const livePoints = live.byRank(activeRank);
+  const pointRows = live.hasData ? livePoints : pointUsers;
+  const taskRows = live.hasData
+    ? live.byTasks().map((p) => ({ name: p.name, tasks: p.tasks }))
+    : LEADERBOARD_TASKS;
+  const referralRows = live.hasData
+    ? live.byReferrals().map((p) => ({ name: p.name, referrals: p.referrals }))
+    : LEADERBOARD_REFERRALS;
 
   const tabs = [
     { key: "points", label: "POINT RANK" },
@@ -140,7 +151,7 @@ export function LeaderboardPage() {
               </span>
             </div>
             <ul className="flex flex-col">
-              {pointUsers.map((u) => (
+              {pointRows.map((u) => (
                 <LeaderboardRow
                   key={u.name}
                   position={u.position}
@@ -162,7 +173,7 @@ export function LeaderboardPage() {
             <span className="text-[11px] text-muted-foreground">Total tasks</span>
           </div>
           <ul className="flex flex-col">
-            {LEADERBOARD_TASKS.map((u, i) => (
+            {taskRows.map((u, i) => (
               <LeaderboardRow
                 key={u.name}
                 position={i + 1}
@@ -183,7 +194,7 @@ export function LeaderboardPage() {
             <span className="text-[11px] text-muted-foreground">Total referrals</span>
           </div>
           <ul className="flex flex-col">
-            {LEADERBOARD_REFERRALS.map((u, i) => (
+            {referralRows.map((u, i) => (
               <LeaderboardRow
                 key={u.name}
                 position={i + 1}
