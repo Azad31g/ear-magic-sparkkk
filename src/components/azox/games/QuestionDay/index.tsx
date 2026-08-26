@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, Coins, Timer, Trophy } from "lucide-react";
 import { useAzox } from "@/components/azox/app-provider";
+import { useGameTasks } from "@/hooks/useGameTasks";
 import { formatPoints } from "@/lib/azox-data";
 import { haptic } from "@/lib/telegram";
 
@@ -77,11 +78,13 @@ const LETTERS = ["A", "B", "C", "D", "E"];
 
 export default function QuestionDay() {
   const { points: accountPoints, addPoints } = useAzox();
+  const { onQuestionComplete } = useGameTasks();
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(SECONDS_PER_QUESTION);
   const [done, setDone] = useState(false);
+  const completedRef = useRef(false);
 
   const current = SAMPLE_QUESTIONS[index] ?? SAMPLE_QUESTIONS[0]!;
 
@@ -116,6 +119,14 @@ export default function QuestionDay() {
     const t = setTimeout(next, 1400);
     return () => clearTimeout(t);
   }, [picked, done, next]);
+
+  useEffect(() => {
+    if (!done || completedRef.current) return;
+    completedRef.current = true;
+    const correctCount = Math.round(score / POINTS_PER_CORRECT);
+    const allCorrect = correctCount === SAMPLE_QUESTIONS.length;
+    onQuestionComplete(allCorrect);
+  }, [done, score, onQuestionComplete]);
 
   const answer = (i: number) => {
     if (picked !== null || done) return;

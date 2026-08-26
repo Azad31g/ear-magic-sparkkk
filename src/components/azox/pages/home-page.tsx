@@ -6,24 +6,30 @@ import { AzoxFooter } from "@/components/azox/footer";
 import { CATEGORIES, RANKS } from "@/lib/azox-data";
 import { AZOX_IMAGES } from "@/lib/azox-images";
 import { Button } from "@/components/ui/button";
+import { formatHMS } from "@/components/azox/games/GlobalButton/useGlobalButton";
 
-function useCountdown(seconds: number) {
-  const [remaining, setRemaining] = useState(seconds);
+const SLOT_MS = 3 * 60 * 60 * 1000; // every 3 hours (UTC+3 slots align with UTC)
+
+function currentSlot(now: number): number {
+  return Math.floor(now / SLOT_MS) * SLOT_MS;
+}
+
+function useGlobalButtonTimer() {
+  const [now, setNow] = useState(() => Date.now());
+
   useEffect(() => {
-    const i = setInterval(() => {
-      setRemaining((r) => (r <= 0 ? seconds : r - 1));
-    }, 1000);
-    return () => clearInterval(i);
-  }, [seconds]);
-  const h = Math.floor(remaining / 3600);
-  const m = Math.floor((remaining % 3600) / 60);
-  const s = remaining % 60;
-  const pad = (n: number) => n.toString().padStart(2, "0");
-  return `${pad(h)}:${pad(m)}:${pad(s)}`;
+    const id = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(id);
+  }, []);
+
+  const slot = currentSlot(now);
+  const nextSlot = slot + SLOT_MS;
+  const timeUntilNext = Math.max(0, nextSlot - now);
+  return formatHMS(timeUntilNext);
 }
 
 export function HomePage() {
-  const time = useCountdown(3 * 3600 + 42 * 60 + 12);
+  const time = useGlobalButtonTimer();
 
   return (
     <div className="flex flex-col gap-5">
