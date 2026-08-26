@@ -120,6 +120,14 @@ export default function QuestionDay() {
     return () => clearTimeout(t);
   }, [picked, done, next]);
 
+  useEffect(() => {
+    if (!done || completedRef.current) return;
+    completedRef.current = true;
+    const correctCount = Math.round(score / POINTS_PER_CORRECT);
+    const allCorrect = correctCount === SAMPLE_QUESTIONS.length;
+    onQuestionComplete(allCorrect);
+  }, [done, score, onQuestionComplete]);
+
   const answer = (i: number) => {
     if (picked !== null || done) return;
     setPicked(i);
