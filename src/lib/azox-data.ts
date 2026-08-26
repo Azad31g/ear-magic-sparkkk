@@ -292,6 +292,20 @@ export const SOCIAL_TASKS: SocialTaskGroup[] = [
     ],
   },
   {
+    platform: "Threads",
+    color: "#000000",
+    accent: "#FFFFFF",
+    tasks: [
+      {
+        id: "th-1",
+        platform: "Threads",
+        label: "Follow Azad Bashqali",
+        points: 100,
+        url: "https://www.threads.com/@azad__x_",
+      },
+    ],
+  },
+  {
     platform: "YouTube",
     color: "#FF0000",
     tasks: [
