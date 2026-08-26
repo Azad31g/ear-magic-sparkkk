@@ -20,6 +20,7 @@ import { useAzox } from "@/components/azox/app-provider";
 import { useGameTasks } from "@/hooks/useGameTasks";
 import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { verifyTelegramMembership } from "@/lib/telegram-verify.functions";
+import { isTelegram, getTelegramUser } from "@/lib/telegram";
 import { type SocialTask, type SocialTaskGroup } from "@/lib/azox-data";
 import { AzoxFooter } from "@/components/azox/footer";
 import { cn } from "@/lib/utils";
@@ -83,8 +84,9 @@ function TaskRow({ task, color }: { task: SocialTask; color: string }) {
   };
 
   const handleVerify = async () => {
-    const telegramId = Number(user.id);
-    if (!user.isTelegram || !Number.isFinite(telegramId)) {
+    const tgUser = getTelegramUser();
+    const telegramId = tgUser?.id ?? Number(user.id);
+    if (!isTelegram() || !telegramId) {
       toast.error("Open the app inside Telegram to verify membership");
       return;
     }

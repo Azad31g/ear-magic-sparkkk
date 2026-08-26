@@ -2,18 +2,25 @@ import { useState } from "react";
 import { Copy, Check, Users, Coins, Zap, Trophy, ChevronRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { useAzox } from "@/components/azox/app-provider";
 import { AzoxFooter } from "@/components/azox/footer";
 import { useGameTasks } from "@/hooks/useGameTasks";
 import { RANKS, formatPoints, nextRank as getNextRank } from "@/lib/azox-data";
 import { referralLinkFor } from "@/lib/azox-backend";
+import { getTelegramUser } from "@/lib/telegram";
 
 export function ProfilePage() {
   const { user, dbUser, points, rank, completedTasks, referrals } = useAzox();
   const { getGameTasksDone } = useGameTasks();
   const [copied, setCopied] = useState(false);
+  const tgUser = getTelegramUser();
+  const displayName = tgUser
+    ? [tgUser.first_name, tgUser.last_name].filter(Boolean).join(" ") || tgUser.username || "AZOX Player"
+    : user.name;
+  const displayUsername = tgUser?.username ? `@${tgUser.username}` : `@${user.username}`;
+  const displayPhoto = tgUser?.photo_url ?? user.photoUrl;
   const referral = dbUser
     ? referralLinkFor(dbUser.referral_code ?? user.username)
     : user.referralLink;
@@ -54,14 +61,15 @@ export function ProfilePage() {
       {/* Identity */}
       <section className="glass glow-purple flex items-center gap-3 rounded-2xl p-4">
         <Avatar className="size-14 border border-accent/40">
+          {displayPhoto && <AvatarImage src={displayPhoto} alt={displayName} />}
           <AvatarFallback className="bg-accent/15 text-lg font-bold text-accent">
             {user.initials}
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
-          <p className="text-base font-bold">{user.name}</p>
+          <p className="text-base font-bold">{displayName}</p>
           <p className="text-xs text-muted-foreground">
-            @{user.username} · joined {user.joinedAt}
+            {displayUsername} · joined {user.joinedAt}
           </p>
         </div>
         <span
