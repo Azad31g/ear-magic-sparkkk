@@ -8,6 +8,11 @@ import {
   readStorage,
   writeStorage,
 } from "@/lib/points";
+import {
+  addPointsRemote,
+  currentTelegramId,
+  fetchUser,
+} from "@/lib/azox-backend";
 
 type PointsState = { points: number; taps: number; globalWins: number };
 
