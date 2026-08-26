@@ -29,7 +29,7 @@ const PLATFORM_ICONS: Record<string, typeof Send> = {
   "X (Twitter)": Twitter,
   Instagram: Instagram,
   TikTok: Music2,
-  Threads: ThreadsIcon as unknown as typeof Send,
+  Threads: SiThreads as unknown as typeof Send,
   YouTube: Youtube,
   Discord: MessagesSquare,
 };
