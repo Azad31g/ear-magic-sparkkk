@@ -29,7 +29,7 @@ function useGlobalButtonTimer() {
 }
 
 export function HomePage() {
-  const time = useCountdown(3 * 3600 + 42 * 60 + 12);
+  const time = useGlobalButtonTimer();
 
   return (
     <div className="flex flex-col gap-5">
