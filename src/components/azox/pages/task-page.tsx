@@ -20,6 +20,7 @@ import { useAzox } from "@/components/azox/app-provider";
 import { useGameTasks } from "@/hooks/useGameTasks";
 import { useSupabaseTasks } from "@/hooks/useSupabaseTasks";
 import { verifyTelegramMembership } from "@/lib/telegram-verify.functions";
+import { isTelegram, getTelegramUser } from "@/lib/telegram";
 import { type SocialTask, type SocialTaskGroup } from "@/lib/azox-data";
 import { AzoxFooter } from "@/components/azox/footer";
 import { cn } from "@/lib/utils";
