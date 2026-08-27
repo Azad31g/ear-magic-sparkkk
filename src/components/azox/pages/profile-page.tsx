@@ -7,14 +7,12 @@ import { Progress } from "@/components/ui/progress";
 import { useAzox } from "@/components/azox/app-provider";
 import { AzoxFooter } from "@/components/azox/footer";
 import { RANKS, formatPoints, nextRank as getNextRank } from "@/lib/azox-data";
-import { fetchTaskCount, referralLinkFor } from "@/lib/azox-backend";
-import { useGameTasks } from "@/hooks/useGameTasks";
+import { syncTasksDone, referralLinkFor } from "@/lib/azox-backend";
 import { getTelegramUser } from "@/lib/telegram";
-import { supabase } from "@/integrations/supabase/client";
 
 export function ProfilePage() {
   const { user, dbUser, points, rank, completedTasks, referrals } = useAzox();
-  const { getGameTasksDone } = useGameTasks();
+
   const [copied, setCopied] = useState(false);
   const [tasksDone, setTasksDone] = useState(0);
   const tgUser = getTelegramUser();
