@@ -36,10 +36,22 @@ export function LeaderboardPage() {
   const livePoints = live.byRank(activeRank);
   const pointRows = live.hasData ? livePoints : pointUsers;
   const taskRows = live.hasData
-    ? live.byTasks().map((p) => ({ name: p.name, tasks: p.tasks }))
+    ? live.byTasks().map((p) => ({
+        name: p.name,
+        tasks: p.tasks,
+        photo_url: p.photo_url,
+        first_name: p.first_name,
+        username: p.username,
+      }))
     : LEADERBOARD_TASKS;
   const referralRows = live.hasData
-    ? live.byReferrals().map((p) => ({ name: p.name, referrals: p.referrals }))
+    ? live.byReferrals().map((p) => ({
+        name: p.name,
+        referrals: p.referrals,
+        photo_url: p.photo_url,
+        first_name: p.first_name,
+        username: p.username,
+      }))
     : LEADERBOARD_REFERRALS;
 
   const tabs = [

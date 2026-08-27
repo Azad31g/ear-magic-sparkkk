@@ -365,6 +365,9 @@ export type LeaderboardUser = {
   name: string;
   points: number;
   avatar?: string;
+  photo_url?: string | null;
+  first_name?: string | null;
+  username?: string | null;
 };
 
 // Demo leaderboard data per rank.
@@ -410,12 +413,18 @@ export type TaskLeader = {
   name: string;
   tasks: number;
   avatar?: string;
+  photo_url?: string | null;
+  first_name?: string | null;
+  username?: string | null;
 };
 
 export type ReferralLeader = {
   name: string;
   referrals: number;
   avatar?: string;
+  photo_url?: string | null;
+  first_name?: string | null;
+  username?: string | null;
 };
 
 // Demo task leaderboard, sorted by total tasks descending.
