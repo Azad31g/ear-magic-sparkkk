@@ -215,10 +215,14 @@ function LeaderboardRow({
   position,
   name,
   value,
+  photoUrl,
+  initials,
 }: {
   position: number;
   name: string;
   value: string;
+  photoUrl?: string;
+  initials?: string;
 }) {
   return (
     <li className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-secondary/40">
@@ -231,8 +235,11 @@ function LeaderboardRow({
         {position}
       </span>
       <Avatar className="size-9">
+        {photoUrl ? (
+          <AvatarImage src={photoUrl} alt={name} />
+        ) : null}
         <AvatarFallback className="bg-secondary text-xs font-semibold">
-          {name.slice(0, 2).toUpperCase()}
+          {initials ?? name.slice(0, 2).toUpperCase()}
         </AvatarFallback>
       </Avatar>
       <span className="min-w-0 flex-1 truncate text-sm font-medium">{name}</span>
