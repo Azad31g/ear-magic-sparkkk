@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { readStorage, writeStorage } from "@/lib/points";
+import { STORAGE_KEYS, readStorage, writeStorage } from "@/lib/points";
 import { getTelegramUser } from "@/lib/telegram";
 
 const STORAGE_KEY = "azox_game_tasks";
@@ -27,14 +27,23 @@ function saveState(s: GameTasksState) {
   writeStorage(STORAGE_KEY, s);
 }
 
-function syncTasksDone(tasksDone: number) {
+function syncTasksDone(gameTasks: number) {
   const tgUser = getTelegramUser();
-  if (tgUser?.id) {
-    void (supabase as any)
-      .from("users")
-      .update({ tasks_done: tasksDone })
-      .eq("telegram_id", tgUser.id);
-  }
+  if (!tgUser?.id) return;
+
+  const tasksState = readStorage<{ completed?: string[] }>(
+    STORAGE_KEYS.tasks,
+    {},
+  );
+  const socialCompleted = Array.isArray(tasksState.completed)
+    ? tasksState.completed
+    : [];
+  const totalTasks = gameTasks + socialCompleted.length;
+
+  void (supabase as any)
+    .from("users")
+    .update({ tasks_done: totalTasks })
+    .eq("telegram_id", tgUser.id);
 }
 
 export function useGameTasks() {
