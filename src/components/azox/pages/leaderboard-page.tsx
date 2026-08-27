@@ -162,6 +162,8 @@ export function LeaderboardPage() {
                   position={u.position}
                   name={u.name}
                   value={formatPoints(u.points)}
+                  photoUrl={isCurrentUser(u.name) ? user.photoUrl : undefined}
+                  initials={isCurrentUser(u.name) ? user.initials : undefined}
                 />
               ))}
             </ul>
