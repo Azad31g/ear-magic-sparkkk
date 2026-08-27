@@ -10,6 +10,7 @@ import { RANKS, formatPoints, nextRank as getNextRank } from "@/lib/azox-data";
 import { fetchTaskCount, referralLinkFor } from "@/lib/azox-backend";
 import { useGameTasks } from "@/hooks/useGameTasks";
 import { getTelegramUser } from "@/lib/telegram";
+import { supabase } from "@/integrations/supabase/client";
 
 export function ProfilePage() {
   const { user, dbUser, points, rank, completedTasks, referrals } = useAzox();
