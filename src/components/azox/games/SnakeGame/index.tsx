@@ -147,6 +147,12 @@ export default function SnakeGame() {
                 <div className="text-[11px] tracking-widest text-muted-foreground">
                   FINAL SCORE
                 </div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  Best:{" "}
+                  <span className="font-bold text-gold">
+                    {globalBest.toLocaleString()}
+                  </span>
+                </div>
                 <div className="mt-4 flex flex-col gap-2">
                   <button
                     type="button"
