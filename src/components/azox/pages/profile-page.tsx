@@ -13,6 +13,7 @@ import { getTelegramUser } from "@/lib/telegram";
 
 export function ProfilePage() {
   const { user, dbUser, points, rank, completedTasks, referrals } = useAzox();
+  const { getGameTasksDone } = useGameTasks();
   const [copied, setCopied] = useState(false);
   const [tasksDone, setTasksDone] = useState(0);
   const tgUser = getTelegramUser();
