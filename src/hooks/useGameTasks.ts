@@ -84,27 +84,35 @@ export function useGameTasks() {
     return 1;
   }, []);
 
-  // Shoot / Snake / TakBom — +10 Tasks on new global best score
+  // Shoot / Snake / TakBom — +10 Tasks on new WORLD record (all users)
   const onNewGlobalBest = useCallback(
     async (gameId: string, newScore: number): Promise<number> => {
       if (newScore <= 0) return 0;
 
-      // Get global best from Supabase
-      const { data } = await (supabase as any)
-        .from("game_scores")
-        .select("score")
+      // The ONE global best row for this game
+      const { data: globalRecord } = await (supabase as any)
+        .from("global_best_scores")
+        .select("best_score")
         .eq("game_id", gameId)
-        .order("score", { ascending: false })
-        .limit(1)
-        .single();
+        .maybeSingle();
 
-      const globalBest = data?.score ?? 0;
+      const currentGlobalBest = globalRecord?.best_score ?? 0;
+      if (newScore <= currentGlobalBest) return 0;
 
-      // Only award if beats global best
-      if (newScore <= globalBest) return 0;
-
-      // New global best! Update Supabase and award tasks
       const tgUser = getTelegramUser();
+
+      await (supabase as any).from("global_best_scores").upsert(
+        {
+          game_id: gameId,
+          best_score: newScore,
+          held_by: tgUser?.id ?? null,
+          held_by_name: tgUser?.first_name ?? null,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "game_id" },
+      );
+
+      // Personal score record
       if (tgUser?.id) {
         await (supabase as any).from("game_scores").upsert(
           {
@@ -127,6 +135,7 @@ export function useGameTasks() {
     },
     [],
   );
+
 
   // Daily Gift streak — +3 Tasks every 5 consecutive days
   const onDailyGiftClaimed = useCallback(() => {

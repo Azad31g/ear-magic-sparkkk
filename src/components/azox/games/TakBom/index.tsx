@@ -3,6 +3,8 @@ import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useAzox } from "@/components/azox/app-provider";
 import { useGameTasks } from "@/hooks/useGameTasks";
+import { useGlobalBest } from "@/hooks/useGlobalBest";
+
 import { FallingObject } from "./FallingObject";
 import { GameGrid } from "./GameGrid";
 import { GameHeader } from "./GameHeader";
@@ -12,6 +14,8 @@ import { useTakBomLogic } from "./useTakBomLogic";
 export default function TakBomGame() {
   const { addPoints } = useAzox();
   const finalScoreRef = useRef(0);
+  const globalBest = useGlobalBest("takbom");
+
   const game = useTakBomLogic((score) => {
     if (score > 0) addPoints(score);
     finalScoreRef.current = score;
@@ -49,6 +53,10 @@ export default function TakBomGame() {
             onMenu={() => (game.state === "paused" ? game.resume() : game.pause())}
           />
           <ScoreBar timeLeft={game.timeLeft} score={game.score} best={game.best} />
+          <div className="px-4 pb-2 text-center text-xs font-semibold text-muted-foreground">
+            🌍 World Best: <span className="text-gold">{globalBest.toLocaleString()}</span>
+          </div>
+
         </div>
 
         <div className="relative flex-1 overflow-hidden">

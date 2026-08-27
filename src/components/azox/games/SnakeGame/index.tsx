@@ -3,6 +3,8 @@ import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useAzox } from "@/components/azox/app-provider";
 import { useGameTasks } from "@/hooks/useGameTasks";
+import { useGlobalBest } from "@/hooks/useGlobalBest";
+
 import { GameBoard } from "./GameBoard";
 import { GameHeader } from "./GameHeader";
 import Joystick from "./Joystick";
@@ -12,6 +14,8 @@ import { useSnakeLogic } from "./useSnakeLogic";
 export default function SnakeGame() {
   const { points, addPoints } = useAzox();
   const finalScoreRef = useRef(0);
+  const globalBest = useGlobalBest("snake");
+
   const game = useSnakeLogic((score) => {
     if (score > 0) addPoints(score);
     finalScoreRef.current = score;
@@ -45,6 +49,10 @@ export default function SnakeGame() {
             onMenu={() => (game.state === "paused" ? game.resume() : game.pause())}
           />
           <ScoreCards score={game.score} best={game.best} />
+          <div className="px-4 pt-2 text-center text-xs font-semibold text-muted-foreground">
+            🌍 World Best: <span className="text-gold">{globalBest.toLocaleString()}</span>
+          </div>
+
         </div>
 
       <div className="mt-3 flex w-full justify-center">
