@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { STORAGE_KEYS, readStorage, todayKey, writeStorage } from "@/lib/points";
-import { getTelegramUser } from "@/lib/telegram";
 import { recordTaskCompletion } from "@/lib/azox-backend";
 
 export const DAILY_GIFT_POINTS = 200;
@@ -38,7 +36,6 @@ export function useTasks(onEarn?: (amount: number) => void) {
     (id: string, fallbackPoints?: number, taskReward?: number) => {
       if (state.completed.includes(id)) return 0;
       const points = fallbackPoints ?? 0;
-      const nextCompleted = [...state.completed, id];
       setState((prev) =>
         prev.completed.includes(id)
           ? prev
@@ -56,18 +53,9 @@ export function useTasks(onEarn?: (amount: number) => void) {
         writeStorage("azox_game_tasks", gameTasksState);
       }
 
-      const tgUser = getTelegramUser();
-      if (tgUser?.id) {
-        const gameTasks = readStorage<{ tasksDone: number }>(
-          "azox_game_tasks",
-          { tasksDone: 0 },
-        );
-        const totalTasks = nextCompleted.length + (gameTasks.tasksDone ?? 0);
-        void (supabase as any)
-          .from("users")
-          .update({ tasks_done: totalTasks })
-          .eq("telegram_id", tgUser.id);
-      }
+      // users.tasks_done is mirrored from user_tasks inside
+      // recordTaskCompletion — the single source of truth.
+
 
       return points;
     },

@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { STORAGE_KEYS, readStorage, writeStorage } from "@/lib/points";
+import { readStorage, writeStorage } from "@/lib/points";
+import { fetchTaskCount } from "@/lib/azox-backend";
 import { getTelegramUser } from "@/lib/telegram";
 
 const STORAGE_KEY = "azox_game_tasks";
@@ -27,24 +28,22 @@ function saveState(s: GameTasksState) {
   writeStorage(STORAGE_KEY, s);
 }
 
-function syncTasksDone(gameTasks: number) {
+/**
+ * users.tasks_done mirrors the real user_tasks count (single source of truth).
+ * Local game counters never overwrite it.
+ */
+function syncTasksDone(_gameTasks: number) {
   const tgUser = getTelegramUser();
   if (!tgUser?.id) return;
 
-  const tasksState = readStorage<{ completed?: string[] }>(
-    STORAGE_KEYS.tasks,
-    {},
+  void fetchTaskCount(tgUser.id).then((realCount) =>
+    (supabase as any)
+      .from("users")
+      .update({ tasks_done: realCount })
+      .eq("telegram_id", tgUser.id),
   );
-  const socialCompleted = Array.isArray(tasksState.completed)
-    ? tasksState.completed
-    : [];
-  const totalTasks = gameTasks + socialCompleted.length;
-
-  void (supabase as any)
-    .from("users")
-    .update({ tasks_done: totalTasks })
-    .eq("telegram_id", tgUser.id);
 }
+
 
 export function useGameTasks() {
   // AZOX Word — +2 Tasks when ALL 5 words answered correctly

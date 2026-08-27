@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import {
   displayName,
+  fetchAllTaskCounts,
   fetchLeaderboard,
   type LeaderboardRow,
 } from "@/lib/azox-backend";
 import { rankForPoints, type RankKey } from "@/lib/azox-data";
 import { RANK_ORDER } from "@/hooks/useLeaderboard";
+
 
 export type LivePlayer = {
   name: string;
@@ -43,16 +45,22 @@ export function useSupabaseLeaderboard() {
     let cancelled = false;
     Promise.all([
       fetchLeaderboard("points", 200),
-      fetchLeaderboard("tasks_done", 100),
-    ]).then(([pointRows, taskRows]) => {
+      fetchAllTaskCounts(),
+    ]).then(([pointRows, taskCounts]) => {
       if (cancelled) return;
-      setPlayers(pointRows.length ? pointRows.map(toPlayer) : []);
-      setTaskPlayers(taskRows.length ? taskRows.map(toPlayer) : []);
+      // user_tasks is the single source of truth for task counts.
+      const withTasks = pointRows.map((row) => ({
+        ...toPlayer(row),
+        tasks: taskCounts.get(row.telegram_id) ?? 0,
+      }));
+      setPlayers(withTasks);
+      setTaskPlayers(withTasks);
     });
     return () => {
       cancelled = true;
     };
   }, []);
+
 
   const byRank = (key: RankKey) =>
     (players ?? [])

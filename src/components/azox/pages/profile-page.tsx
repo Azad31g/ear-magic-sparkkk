@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Copy, Check, Users, Coins, Zap, Trophy, ChevronRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
@@ -6,15 +6,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { useAzox } from "@/components/azox/app-provider";
 import { AzoxFooter } from "@/components/azox/footer";
-import { useGameTasks } from "@/hooks/useGameTasks";
 import { RANKS, formatPoints, nextRank as getNextRank } from "@/lib/azox-data";
-import { referralLinkFor } from "@/lib/azox-backend";
+import { fetchTaskCount, referralLinkFor } from "@/lib/azox-backend";
 import { getTelegramUser } from "@/lib/telegram";
 
 export function ProfilePage() {
   const { user, dbUser, points, rank, completedTasks, referrals } = useAzox();
-  const { getGameTasksDone } = useGameTasks();
   const [copied, setCopied] = useState(false);
+  const [tasksDone, setTasksDone] = useState(0);
   const tgUser = getTelegramUser();
   const displayName = tgUser
     ? [tgUser.first_name, tgUser.last_name].filter(Boolean).join(" ") || tgUser.username || "AZOX Player"
@@ -24,9 +23,20 @@ export function ProfilePage() {
   const referral = dbUser
     ? referralLinkFor(dbUser.referral_code ?? user.username)
     : user.referralLink;
-  const tasksDone = completedTasks.size + getGameTasksDone();
   const rankLabel = dbUser?.rank ?? rank.key;
   const nextRank = getNextRank(points);
+
+  // user_tasks is the single source of truth for the completed-task count.
+  useEffect(() => {
+    if (!tgUser?.id) return;
+    let cancelled = false;
+    void fetchTaskCount(tgUser.id).then((count) => {
+      if (!cancelled) setTasksDone(count);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [tgUser?.id, completedTasks.size]);
 
   const progress = nextRank
     ? Math.min(
