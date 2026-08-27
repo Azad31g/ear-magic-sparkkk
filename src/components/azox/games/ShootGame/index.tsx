@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useGameTasks } from "@/hooks/useGameTasks";
-import { useGlobalBest } from "@/hooks/useGlobalBest";
 
 import { readStorage, writeStorage } from "@/lib/points";
 import { initTelegram } from "@/lib/telegram";
@@ -18,8 +17,6 @@ export default function ShootGame({
 }) {
   const { onNewGlobalBest } = useGameTasks();
   const gameRef = useRef<Game | null>(null);
-  const globalBest = useGlobalBest("shoot");
-
   const finalScoreRef = useRef(0);
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
@@ -61,12 +58,6 @@ export default function ShootGame({
         paused={paused}
         onTogglePause={handleTogglePause}
       />
-      <div className="px-3 pt-2 text-center text-xs font-semibold text-neutral-400">
-        🌍 World Best:{" "}
-        <span className="text-yellow-400">{globalBest.toLocaleString()}</span>
-      </div>
-
-
       <GameCanvas
         onReady={(game) => {
           gameRef.current = game;
