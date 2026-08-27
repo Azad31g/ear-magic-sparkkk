@@ -10,7 +10,8 @@ import {
 } from "@/lib/azox-data";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { useSupabaseLeaderboard } from "@/hooks/useSupabaseLeaderboard";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useAzox } from "@/components/azox/app-provider";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type LeaderboardTab = "points" | "tasks" | "referrals";
 
