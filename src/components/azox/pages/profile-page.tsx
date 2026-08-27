@@ -33,20 +33,14 @@ export function ProfilePage() {
   useEffect(() => {
     if (!tgUser?.id) return;
     let cancelled = false;
-    void fetchTaskCount(tgUser.id).then((count) => {
-      const total = count + getGameTasksDone();
-      if (!cancelled) setTasksDone(total);
-      if (tgUser?.id) {
-        void (supabase as any)
-          .from("users")
-          .update({ tasks_done: total })
-          .eq("telegram_id", tgUser.id);
-      }
+    void syncTasksDone().then((count) => {
+      if (!cancelled) setTasksDone(count);
     });
     return () => {
       cancelled = true;
     };
-  }, [tgUser?.id, completedTasks.size, getGameTasksDone]);
+  }, [tgUser?.id, completedTasks.size]);
+
 
   const progress = nextRank
     ? Math.min(
