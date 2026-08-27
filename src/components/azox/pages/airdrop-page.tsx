@@ -395,6 +395,7 @@ export function AirdropPage() {
       autoRegisterAttemptedRef.current = null;
       return;
     }
+    if (dbRegistration) return;
     if (!wasConnected && address) void handleRegister(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, address]);
