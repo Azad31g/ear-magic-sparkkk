@@ -157,10 +157,12 @@ export type LeaderboardRow = {
   telegram_id: number;
   username: string | null;
   first_name: string | null;
+  last_name: string | null;
   points: number;
   tasks_done: number;
   referral_count: number;
   rank: string | null;
+  photo_url: string | null;
 };
 
 export function displayName(row: {
@@ -177,7 +179,7 @@ export async function fetchLeaderboard(
   try {
     const { data, error } = await db
       .from("users")
-      .select("telegram_id, username, first_name, points, tasks_done, referral_count, rank")
+      .select("telegram_id, username, first_name, last_name, points, tasks_done, referral_count, rank, photo_url")
       .order(column, { ascending: false })
       .limit(limit);
     if (error) throw error;

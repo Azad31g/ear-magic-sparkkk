@@ -13,6 +13,9 @@ export type LivePlayer = {
   tasks: number;
   referrals: number;
   rank: RankKey;
+  photo_url: string | null;
+  first_name: string | null;
+  username: string | null;
 };
 
 function toPlayer(row: LeaderboardRow): LivePlayer {
@@ -25,6 +28,9 @@ function toPlayer(row: LeaderboardRow): LivePlayer {
     tasks: row.tasks_done ?? 0,
     referrals: row.referral_count ?? 0,
     rank,
+    photo_url: row.photo_url ?? null,
+    first_name: row.first_name ?? null,
+    username: row.username ?? null,
   };
 }
 
