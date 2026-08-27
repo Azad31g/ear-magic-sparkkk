@@ -56,18 +56,9 @@ export function useTasks(onEarn?: (amount: number) => void) {
         writeStorage("azox_game_tasks", gameTasksState);
       }
 
-      const tgUser = getTelegramUser();
-      if (tgUser?.id) {
-        const gameTasks = readStorage<{ tasksDone: number }>(
-          "azox_game_tasks",
-          { tasksDone: 0 },
-        );
-        const totalTasks = nextCompleted.length + (gameTasks.tasksDone ?? 0);
-        void (supabase as any)
-          .from("users")
-          .update({ tasks_done: totalTasks })
-          .eq("telegram_id", tgUser.id);
-      }
+      // users.tasks_done is mirrored from user_tasks inside
+      // recordTaskCompletion — the single source of truth.
+
 
       return points;
     },
