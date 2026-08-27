@@ -47,10 +47,6 @@ export default function SnakeGame() {
             onMenu={() => (game.state === "paused" ? game.resume() : game.pause())}
           />
           <ScoreCards score={game.score} best={game.best} />
-          <div className="px-4 pt-2 text-center text-xs font-semibold text-muted-foreground">
-            🌍 World Best: <span className="text-gold">{globalBest.toLocaleString()}</span>
-          </div>
-
         </div>
 
       <div className="mt-3 flex w-full justify-center">
