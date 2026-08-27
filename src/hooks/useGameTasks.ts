@@ -1,6 +1,7 @@
 import { useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { readStorage, writeStorage } from "@/lib/points";
-import { saveGameScore } from "@/lib/azox-backend";
+import { getTelegramUser } from "@/lib/telegram";
 
 const STORAGE_KEY = "azox_game_tasks";
 const STREAK_KEY = "azox_daily_streak";
@@ -26,6 +27,16 @@ function saveState(s: GameTasksState) {
   writeStorage(STORAGE_KEY, s);
 }
 
+function syncTasksDone(tasksDone: number) {
+  const tgUser = getTelegramUser();
+  if (tgUser?.id) {
+    void (supabase as any)
+      .from("users")
+      .update({ tasks_done: tasksDone })
+      .eq("telegram_id", tgUser.id);
+  }
+}
+
 export function useGameTasks() {
   // AZOX Word — +2 Tasks when ALL 5 words answered correctly
   const onWordComplete = useCallback((allCorrect: boolean) => {
@@ -37,6 +48,7 @@ export function useGameTasks() {
     state.completedOnce.push(key);
     state.tasksDone += 2;
     saveState(state);
+    syncTasksDone(state.tasksDone);
     return 2;
   }, []);
 
@@ -45,6 +57,7 @@ export function useGameTasks() {
     const state = loadState();
     state.tasksDone += 1;
     saveState(state);
+    syncTasksDone(state.tasksDone);
     return 1;
   }, []);
 
@@ -58,6 +71,7 @@ export function useGameTasks() {
     state.completedOnce.push(key);
     state.tasksDone += 2;
     saveState(state);
+    syncTasksDone(state.tasksDone);
     return 2;
   }, []);
 
@@ -66,18 +80,53 @@ export function useGameTasks() {
     const state = loadState();
     state.tasksDone += 1;
     saveState(state);
+    syncTasksDone(state.tasksDone);
     return 1;
   }, []);
 
-  // Shoot / Snake / TakBom — +10 Tasks on new best score (game validates the record)
-  const onNewGlobalBest = useCallback((gameId: string, newScore: number) => {
-    if (newScore <= 0) return 0;
-    void saveGameScore(gameId, newScore);
-    const state = loadState();
-    state.tasksDone += 10;
-    saveState(state);
-    return 10;
-  }, []);
+  // Shoot / Snake / TakBom — +10 Tasks on new global best score
+  const onNewGlobalBest = useCallback(
+    async (gameId: string, newScore: number): Promise<number> => {
+      if (newScore <= 0) return 0;
+
+      // Get global best from Supabase
+      const { data } = await (supabase as any)
+        .from("game_scores")
+        .select("score")
+        .eq("game_id", gameId)
+        .order("score", { ascending: false })
+        .limit(1)
+        .single();
+
+      const globalBest = data?.score ?? 0;
+
+      // Only award if beats global best
+      if (newScore <= globalBest) return 0;
+
+      // New global best! Update Supabase and award tasks
+      const tgUser = getTelegramUser();
+      if (tgUser?.id) {
+        await (supabase as any).from("game_scores").upsert(
+          {
+            telegram_id: tgUser.id,
+            game_id: gameId,
+            score: newScore,
+            is_best: true,
+          },
+          { onConflict: "telegram_id,game_id" },
+        );
+      }
+
+      // Award +10 tasks
+      const state = loadState();
+      state.tasksDone += 10;
+      saveState(state);
+      syncTasksDone(state.tasksDone);
+
+      return 10;
+    },
+    [],
+  );
 
   // Daily Gift streak — +3 Tasks every 5 consecutive days
   const onDailyGiftClaimed = useCallback(() => {
@@ -112,6 +161,7 @@ export function useGameTasks() {
 
     writeStorage(STREAK_KEY, streak);
     saveState(state);
+    if (tasksEarned > 0) syncTasksDone(state.tasksDone);
     return tasksEarned;
   }, []);
 

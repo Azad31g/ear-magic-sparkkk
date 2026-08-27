@@ -24,9 +24,7 @@ export function ProfilePage() {
   const referral = dbUser
     ? referralLinkFor(dbUser.referral_code ?? user.username)
     : user.referralLink;
-  const tasksDone = dbUser
-    ? dbUser.tasks_done
-    : completedTasks.size + getGameTasksDone();
+  const tasksDone = completedTasks.size + getGameTasksDone();
   const rankLabel = dbUser?.rank ?? rank.key;
   const nextRank = getNextRank(points);
 

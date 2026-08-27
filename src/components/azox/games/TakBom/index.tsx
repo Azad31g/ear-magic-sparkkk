@@ -28,8 +28,9 @@ export default function TakBomGame() {
     if (overFiredRef.current) return;
     overFiredRef.current = true;
     if (!game.newRecord) return;
-    const earnedTasks = onNewGlobalBest("takbom", finalScoreRef.current);
-    if (earnedTasks > 0) toast.success("+10 Tasks earned! 🏆 New Global Best!");
+    onNewGlobalBest("takbom", finalScoreRef.current).then((earnedTasks) => {
+      if (earnedTasks > 0) toast.success("+10 Tasks earned! 🏆 New Global Best!");
+    });
   }, [game.state, game.score, onNewGlobalBest]);
 
   const [flash, setFlash] = useState(false);
