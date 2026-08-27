@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { STORAGE_KEYS, readStorage, writeStorage } from "@/lib/points";
-import { getTelegramUser, initTelegram, type TelegramUser } from "@/lib/telegram";
+import { getStartParam, getTelegramUser, initTelegram, type TelegramUser } from "@/lib/telegram";
 import {
   referralLinkFor,
   syncTelegramUser,
   fetchUser,
+  registerReferral,
   type DbUser,
 } from "@/lib/azox-backend";
 
@@ -97,8 +98,18 @@ export function useUser() {
       setReady(true);
 
       // Step 2: Sync with Supabase in background
-      void syncTelegramUser().then((row) => {
+      void syncTelegramUser().then(async (row) => {
         if (cancelled || !row) return;
+        // Referral attribution (database enforces one-time reward).
+        const startParam = getStartParam();
+        if (startParam) {
+          const awarded = await registerReferral(startParam);
+          if (awarded) {
+            const fresh = await fetchUser(row.telegram_id);
+            if (fresh) row = fresh;
+          }
+        }
+        if (cancelled) return;
         setDbUser(row);
         // Merge but keep live Telegram data for display
         const merged = {

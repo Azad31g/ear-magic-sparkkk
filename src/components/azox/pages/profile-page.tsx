@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Copy, Check, Users, Coins, Zap, Trophy, ChevronRight } from "lucide-react";
+import { Copy, Check, Users, Coins, Zap, Trophy, ChevronRight, Share2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -59,6 +59,11 @@ export function ProfilePage() {
     }
   };
 
+  const share = () => {
+    const url = `https://t.me/share/url?url=${encodeURIComponent(referral)}&text=${encodeURIComponent("Join AZOX and start earning points!")}`;
+    window.open(url, "_blank");
+  };
+
   const stats = [
     { label: "Total Points", value: formatPoints(points), icon: Coins },
     { label: "Current Rank", value: rankLabel, icon: Trophy },
@@ -116,11 +121,27 @@ export function ProfilePage() {
       <section className="grid grid-cols-2 gap-3">
         {stats.map((s) => {
           const Icon = s.icon;
-          return (
-            <div key={s.label} className="glass rounded-2xl p-4">
+          const body = (
+            <>
               <Icon className="size-4 text-accent" aria-hidden="true" />
               <p className="mt-2 text-lg font-bold tabular-nums">{s.value}</p>
               <p className="text-[11px] text-muted-foreground">{s.label}</p>
+            </>
+          );
+          if (s.label === "Referrals") {
+            return (
+              <Link
+                key={s.label}
+                to="/referrals"
+                className="glass block rounded-2xl p-4 text-left"
+              >
+                {body}
+              </Link>
+            );
+          }
+          return (
+            <div key={s.label} className="glass rounded-2xl p-4">
+              {body}
             </div>
           );
         })}
@@ -164,6 +185,14 @@ export function ProfilePage() {
               <Copy className="size-4" aria-hidden="true" />
             )}
             {copied ? "Copied" : "Copy"}
+          </Button>
+          <Button
+            onClick={share}
+            variant="outline"
+            className="rounded-xl border-accent/50 font-semibold text-accent"
+          >
+            <Share2 className="size-4" aria-hidden="true" />
+            Share
           </Button>
         </div>
       </section>
