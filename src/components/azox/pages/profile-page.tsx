@@ -33,12 +33,12 @@ export function ProfilePage() {
     if (!tgUser?.id) return;
     let cancelled = false;
     void fetchTaskCount(tgUser.id).then((count) => {
-      if (!cancelled) setTasksDone(count);
+      if (!cancelled) setTasksDone(count + getGameTasksDone());
     });
     return () => {
       cancelled = true;
     };
-  }, [tgUser?.id, completedTasks.size]);
+  }, [tgUser?.id, completedTasks.size, getGameTasksDone]);
 
   const progress = nextRank
     ? Math.min(
