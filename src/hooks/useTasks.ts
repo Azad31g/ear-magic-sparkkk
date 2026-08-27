@@ -63,7 +63,7 @@ export function useTasks(onEarn?: (amount: number) => void) {
           { tasksDone: 0 },
         );
         const totalTasks = nextCompleted.length + (gameTasks.tasksDone ?? 0);
-        void supabase
+        void (supabase as any)
           .from("users")
           .update({ tasks_done: totalTasks })
           .eq("telegram_id", tgUser.id);
