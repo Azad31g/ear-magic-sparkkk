@@ -15,6 +15,12 @@ import { waitForTransactionReceipt } from "@wagmi/core";
 import { encodeFunctionData, formatEther } from "viem";
 import { writeStorage } from "@/lib/points";
 import {
+  currentTelegramId,
+  fetchWalletRegistration,
+  saveWalletRegistration,
+  type WalletRegistration,
+} from "@/lib/azox-backend";
+import {
   AZOX_AIRDROP_ABI,
   AZOX_AIRDROP_ADDRESS,
   REGISTRATION_FEE,
