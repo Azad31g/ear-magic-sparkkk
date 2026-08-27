@@ -29,7 +29,6 @@ export default function SnakeGame() {
     }
     if (overFiredRef.current) return;
     overFiredRef.current = true;
-    if (!game.newRecord) return;
     onNewGlobalBest("snake", finalScoreRef.current).then((earnedTasks) => {
       if (earnedTasks > 0) toast.success("+10 Tasks earned! 🏆 New Global Best!");
     });
