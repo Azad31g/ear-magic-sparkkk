@@ -30,7 +30,7 @@ function saveState(s: GameTasksState) {
 function syncTasksDone(tasksDone: number) {
   const tgUser = getTelegramUser();
   if (tgUser?.id) {
-    void supabase
+    void (supabase as any)
       .from("users")
       .update({ tasks_done: tasksDone })
       .eq("telegram_id", tgUser.id);
