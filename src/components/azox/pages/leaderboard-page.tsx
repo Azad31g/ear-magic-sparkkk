@@ -27,6 +27,7 @@ export function LeaderboardPage() {
     colorFor: rankColor,
   } = useLeaderboard(activeRank);
   const live = useSupabaseLeaderboard();
+  const { user } = useAzox();
   const activeThreshold = thresholdFor(activeRank);
 
   const livePoints = live.byRank(activeRank);
