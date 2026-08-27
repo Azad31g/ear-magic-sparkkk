@@ -3,7 +3,6 @@ import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useAzox } from "@/components/azox/app-provider";
 import { useGameTasks } from "@/hooks/useGameTasks";
-import { useGlobalBest } from "@/hooks/useGlobalBest";
 
 import { GameBoard } from "./GameBoard";
 import { GameHeader } from "./GameHeader";
