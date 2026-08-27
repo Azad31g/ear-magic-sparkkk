@@ -181,6 +181,65 @@ export async function recordTaskCompletion(
   if (points > 0) await addPointsRemote(points);
 }
 
+/**
+ * Records N task units under one logical achievement (baseId), idempotently.
+ * Each unit is a distinct row in user_tasks, so the real count stays truthful
+ * and a repeated award for the same achievement never double-counts.
+ */
+export async function recordTaskUnits(
+  baseId: string,
+  units: number,
+): Promise<number> {
+  const telegramId = currentTelegramId();
+  if (!telegramId || units <= 0) return 0;
+  const ids = Array.from({ length: units }, (_, i) =>
+    i === 0 ? baseId : `${baseId}#${i + 1}`,
+  );
+  try {
+    const { data: existing } = await db
+      .from("user_tasks")
+      .select("task_id")
+      .eq("telegram_id", telegramId)
+      .in("task_id", ids);
+    const have = new Set(
+      ((existing ?? []) as { task_id: string }[]).map((r) => r.task_id),
+    );
+    const missing = ids.filter((id) => !have.has(id));
+    if (missing.length) {
+      await db.from("user_tasks").upsert(
+        missing.map((task_id) => ({ telegram_id: telegramId, task_id })),
+        { onConflict: "telegram_id,task_id" },
+      );
+    }
+    const realCount = await fetchTaskCount(telegramId);
+    await db
+      .from("users")
+      .update({ tasks_done: realCount })
+      .eq("telegram_id", telegramId);
+    return missing.length;
+  } catch (e) {
+    console.error("[azox-backend] recordTaskUnits failed", e);
+    return 0;
+  }
+}
+
+/** Re-syncs users.tasks_done from the real user_tasks rows. */
+export async function syncTasksDone(): Promise<number> {
+  const telegramId = currentTelegramId();
+  if (!telegramId) return 0;
+  const realCount = await fetchTaskCount(telegramId);
+  try {
+    await db
+      .from("users")
+      .update({ tasks_done: realCount })
+      .eq("telegram_id", telegramId);
+  } catch (e) {
+    console.error("[azox-backend] syncTasksDone failed", e);
+  }
+  return realCount;
+}
+
+
 
 /** Saves a game score (one row per game per user). */
 export async function saveGameScore(
