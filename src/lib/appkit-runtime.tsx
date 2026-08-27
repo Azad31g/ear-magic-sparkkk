@@ -23,6 +23,28 @@ type TgWebApp = {
   openTelegramLink?: (url: string) => void;
 };
 
+// Telegram's WebView cannot handle custom wallet schemes (metamask://,
+// trust://…): navigating to them shows "ERR_UNKNOWN_URL_SCHEME" and kills the
+// Mini App. Convert known wallet deep links to their https universal-link
+// equivalents and always hand them to Telegram's openLink API.
+function toUniversalLink(href: string): string | null {
+  const map: Record<string, string> = {
+    "metamask:": "https://metamask.app.link",
+    "trust:": "https://link.trustwallet.com",
+    "rainbow:": "https://rnbwapp.com",
+    "ledgerlive:": "https://ledger.com/ledger-live",
+    "safe:": "https://app.safe.global",
+    "zerion:": "https://wallet.zerion.io",
+    "uniswap:": "https://uniswap.org/app",
+    "okex:": "https://www.okx.com/download",
+    "bnc:": "https://app.binance.com",
+  };
+  const match = Object.keys(map).find((s) => href.startsWith(s));
+  if (!match) return null;
+  const rest = href.slice(match.length).replace(/^\/+/, "");
+  return `${map[match]}/${rest}`;
+}
+
 function patchTelegramWindowOpen() {
   if (typeof window === "undefined") return;
   const tg = (window as unknown as { Telegram?: { WebApp?: TgWebApp } }).Telegram
@@ -36,15 +58,21 @@ function patchTelegramWindowOpen() {
       } else if (href.startsWith("http")) {
         tg.openLink?.(href);
       } else {
-        // Custom wallet schemes (metamask://, trust://…)
-        window.location.href = href;
+        // Custom wallet schemes → universal https link, opened externally.
+        const universal = toUniversalLink(href);
+        if (universal) {
+          tg.openLink?.(universal);
+        } else {
+          tg.openLink?.(href);
+        }
       }
-    } catch {
-      window.location.href = href;
+    } catch (err) {
+      console.error("[appkit-runtime] failed to open wallet link", err);
     }
     return null;
   }) as typeof window.open;
 }
+
 
 patchTelegramWindowOpen();
 
