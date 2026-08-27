@@ -68,14 +68,14 @@ export default function ShootGame({
           finalScoreRef.current = p.finalScore;
           const previousBest = readStorage<number>(SHOOT_BEST_KEY, 0);
           const newRecord = p.finalScore > previousBest;
-          if (newRecord) {
-            writeStorage(SHOOT_BEST_KEY, p.finalScore);
-            setBest(p.finalScore);
-          }
+          if (newRecord) writeStorage(SHOOT_BEST_KEY, p.finalScore);
           setOver({ ...p, newRecord });
           onNewGlobalBest("shoot", finalScoreRef.current).then((earnedTasks) => {
             if (earnedTasks > 0) {
+              bumpGlobalBest(p.finalScore);
               toast.success("+10 Tasks earned! 🏆 New Global Best!");
+            } else {
+              void refreshGlobalBest();
             }
           });
           onGameOver?.(p.finalScore);
