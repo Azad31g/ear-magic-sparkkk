@@ -230,8 +230,8 @@ function LeaderboardRow({
   position: number;
   name: string;
   value: string;
-  photoUrl?: string;
-  initials?: string;
+  photoUrl?: string | undefined;
+  initials?: string | undefined;
 }) {
   return (
     <li className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-secondary/40">
