@@ -10,7 +10,8 @@ import {
 } from "@/lib/azox-data";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { useSupabaseLeaderboard } from "@/hooks/useSupabaseLeaderboard";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useAzox } from "@/components/azox/app-provider";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type LeaderboardTab = "points" | "tasks" | "referrals";
 
@@ -26,7 +27,11 @@ export function LeaderboardPage() {
     colorFor: rankColor,
   } = useLeaderboard(activeRank);
   const live = useSupabaseLeaderboard();
+  const { user } = useAzox();
   const activeThreshold = thresholdFor(activeRank);
+
+  const isCurrentUser = (rowName: string) =>
+    rowName === user.name || rowName === `@${user.username}`;
 
   const livePoints = live.byRank(activeRank);
   const pointRows = live.hasData ? livePoints : pointUsers;
@@ -157,6 +162,8 @@ export function LeaderboardPage() {
                   position={u.position}
                   name={u.name}
                   value={formatPoints(u.points)}
+                  photoUrl={isCurrentUser(u.name) ? (user.photoUrl ?? undefined) : undefined}
+                  initials={isCurrentUser(u.name) ? user.initials : undefined}
                 />
               ))}
             </ul>
@@ -179,6 +186,8 @@ export function LeaderboardPage() {
                 position={i + 1}
                 name={u.name}
                 value={u.tasks.toLocaleString("en-US")}
+                photoUrl={isCurrentUser(u.name) ? (user.photoUrl ?? undefined) : undefined}
+                initials={isCurrentUser(u.name) ? user.initials : undefined}
               />
             ))}
           </ul>
@@ -200,6 +209,8 @@ export function LeaderboardPage() {
                 position={i + 1}
                 name={u.name}
                 value={u.referrals.toLocaleString("en-US")}
+                photoUrl={isCurrentUser(u.name) ? (user.photoUrl ?? undefined) : undefined}
+                initials={isCurrentUser(u.name) ? user.initials : undefined}
               />
             ))}
           </ul>
@@ -213,10 +224,14 @@ function LeaderboardRow({
   position,
   name,
   value,
+  photoUrl,
+  initials,
 }: {
   position: number;
   name: string;
   value: string;
+  photoUrl?: string | undefined;
+  initials?: string | undefined;
 }) {
   return (
     <li className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-secondary/40">
@@ -229,8 +244,11 @@ function LeaderboardRow({
         {position}
       </span>
       <Avatar className="size-9">
+        {photoUrl ? (
+          <AvatarImage src={photoUrl} alt={name} />
+        ) : null}
         <AvatarFallback className="bg-secondary text-xs font-semibold">
-          {name.slice(0, 2).toUpperCase()}
+          {initials ?? name.slice(0, 2).toUpperCase()}
         </AvatarFallback>
       </Avatar>
       <span className="min-w-0 flex-1 truncate text-sm font-medium">{name}</span>
