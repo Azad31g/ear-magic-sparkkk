@@ -37,7 +37,7 @@ export function ProfilePage() {
       const total = count + getGameTasksDone();
       if (!cancelled) setTasksDone(total);
       if (tgUser?.id) {
-        void supabase
+        void (supabase as any)
           .from("users")
           .update({ tasks_done: total })
           .eq("telegram_id", tgUser.id);
