@@ -356,6 +356,19 @@ export function AirdropPage() {
         return;
       }
       console.info("[airdrop] REGISTRATION_VERIFIED");
+      const telegramId = currentTelegramId();
+      if (telegramId) {
+        const saved = await saveWalletRegistration({
+          telegramId,
+          walletAddress: address,
+          chainId: robinhoodTestnet.id,
+          txHash: hash,
+        });
+        if (saved) setDbRegistration(saved);
+      }
+      writeStorage(KEYS.registered, true);
+      writeStorage(KEYS.address, address);
+      writeStorage(KEYS.date, new Date().toISOString());
       setConfetti(true);
       setTimeout(() => setConfetti(false), 2200);
     } catch (error) {
