@@ -58,12 +58,6 @@ export default function ShootGame({
         paused={paused}
         onTogglePause={handleTogglePause}
       />
-      <div className="px-3 pt-2 text-center text-xs font-semibold text-neutral-400">
-        🌍 World Best:{" "}
-        <span className="text-yellow-400">{globalBest.toLocaleString()}</span>
-      </div>
-
-
       <GameCanvas
         onReady={(game) => {
           gameRef.current = game;
