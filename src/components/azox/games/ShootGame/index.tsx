@@ -16,17 +16,17 @@ export default function ShootGame({
   onGameOver?: (score: number) => void;
 }) {
   const { onNewGlobalBest } = useGameTasks();
+  const { globalBest: best, refresh: refreshGlobalBest, bumpGlobalBest } =
+    useGlobalBest("shoot");
   const gameRef = useRef<Game | null>(null);
   const finalScoreRef = useRef(0);
   const [score, setScore] = useState(0);
-  const [best, setBest] = useState(0);
   const [timeMs, setTimeMs] = useState(0);
   const [paused, setPaused] = useState(false);
   const [over, setOver] = useState<ShootGameOverState | null>(null);
 
   useEffect(() => {
     initTelegram();
-    setBest(readStorage<number>(SHOOT_BEST_KEY, 0));
   }, []);
 
   const handleTogglePause = () => {
