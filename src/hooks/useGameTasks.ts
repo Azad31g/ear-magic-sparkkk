@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { STORAGE_KEYS, readStorage, writeStorage } from "@/lib/points";
+import { readStorage, writeStorage } from "@/lib/points";
+import { fetchTaskCount } from "@/lib/azox-backend";
 import { getTelegramUser } from "@/lib/telegram";
 
 const STORAGE_KEY = "azox_game_tasks";
