@@ -162,8 +162,9 @@ export function LeaderboardPage() {
                   position={u.position}
                   name={u.name}
                   value={formatPoints(u.points)}
-                  photoUrl={isCurrentUser(u.name) ? (user.photoUrl ?? undefined) : undefined}
-                  initials={isCurrentUser(u.name) ? user.initials : undefined}
+                  photoUrl={u.photo_url ?? undefined}
+                  firstName={u.first_name ?? undefined}
+                  username={u.username ?? undefined}
                 />
               ))}
             </ul>
@@ -186,8 +187,9 @@ export function LeaderboardPage() {
                 position={i + 1}
                 name={u.name}
                 value={u.tasks.toLocaleString("en-US")}
-                photoUrl={isCurrentUser(u.name) ? (user.photoUrl ?? undefined) : undefined}
-                initials={isCurrentUser(u.name) ? user.initials : undefined}
+                photoUrl={u.photo_url ?? undefined}
+                firstName={u.first_name ?? undefined}
+                username={u.username ?? undefined}
               />
             ))}
           </ul>
@@ -209,8 +211,9 @@ export function LeaderboardPage() {
                 position={i + 1}
                 name={u.name}
                 value={u.referrals.toLocaleString("en-US")}
-                photoUrl={isCurrentUser(u.name) ? (user.photoUrl ?? undefined) : undefined}
-                initials={isCurrentUser(u.name) ? user.initials : undefined}
+                photoUrl={u.photo_url ?? undefined}
+                firstName={u.first_name ?? undefined}
+                username={u.username ?? undefined}
               />
             ))}
           </ul>
@@ -225,13 +228,15 @@ function LeaderboardRow({
   name,
   value,
   photoUrl,
-  initials,
+  firstName,
+  username,
 }: {
   position: number;
   name: string;
   value: string;
   photoUrl?: string | undefined;
-  initials?: string | undefined;
+  firstName?: string | undefined;
+  username?: string | undefined;
 }) {
   return (
     <li className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-secondary/40">
@@ -245,10 +250,13 @@ function LeaderboardRow({
       </span>
       <Avatar className="size-9">
         {photoUrl ? (
-          <AvatarImage src={photoUrl} alt={name} />
+          <AvatarImage
+            src={photoUrl}
+            alt={firstName ?? username ?? "User"}
+          />
         ) : null}
         <AvatarFallback className="bg-secondary text-xs font-semibold">
-          {initials ?? name.slice(0, 2).toUpperCase()}
+          {(firstName?.[0] ?? username?.[0] ?? "?").toUpperCase()}
         </AvatarFallback>
       </Avatar>
       <span className="min-w-0 flex-1 truncate text-sm font-medium">{name}</span>
