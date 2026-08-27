@@ -8,10 +8,12 @@ import { useAzox } from "@/components/azox/app-provider";
 import { AzoxFooter } from "@/components/azox/footer";
 import { RANKS, formatPoints, nextRank as getNextRank } from "@/lib/azox-data";
 import { fetchTaskCount, referralLinkFor } from "@/lib/azox-backend";
+import { useGameTasks } from "@/hooks/useGameTasks";
 import { getTelegramUser } from "@/lib/telegram";
 
 export function ProfilePage() {
   const { user, dbUser, points, rank, completedTasks, referrals } = useAzox();
+  const { getGameTasksDone } = useGameTasks();
   const [copied, setCopied] = useState(false);
   const [tasksDone, setTasksDone] = useState(0);
   const tgUser = getTelegramUser();
@@ -31,12 +33,12 @@ export function ProfilePage() {
     if (!tgUser?.id) return;
     let cancelled = false;
     void fetchTaskCount(tgUser.id).then((count) => {
-      if (!cancelled) setTasksDone(count);
+      if (!cancelled) setTasksDone(count + getGameTasksDone());
     });
     return () => {
       cancelled = true;
     };
-  }, [tgUser?.id, completedTasks.size]);
+  }, [tgUser?.id, completedTasks.size, getGameTasksDone]);
 
   const progress = nextRank
     ? Math.min(
@@ -66,24 +68,6 @@ export function ProfilePage() {
 
   return (
     <div className="flex flex-col gap-5">
-      {/* TEMP DEBUG - remove after fix */}
-      {(() => {
-        const tg = typeof window !== "undefined" ? window.Telegram : null;
-        const webApp = tg?.WebApp;
-        const user = webApp?.initDataUnsafe?.user;
-        const initData = webApp?.initData;
-        return (
-          <div style={{ background: "#1a0000", border: "1px solid red", borderRadius: 8, padding: 12, fontSize: 11, color: "#fff", marginBottom: 8, wordBreak: "break-all" }}>
-            <p><b>window.Telegram:</b> {tg ? "EXISTS" : "NULL"}</p>
-            <p><b>WebApp:</b> {webApp ? "EXISTS" : "NULL"}</p>
-            <p><b>initData:</b> {initData ? initData.slice(0, 50) + "..." : "EMPTY"}</p>
-            <p><b>user:</b> {user ? JSON.stringify(user) : "NULL"}</p>
-            <p><b>user.id:</b> {user?.id ?? "NULL"}</p>
-            <p><b>user.first_name:</b> {user?.first_name ?? "NULL"}</p>
-          </div>
-        );
-      })()}
-
       {/* Identity */}
       <section className="glass glow-purple flex items-center gap-3 rounded-2xl p-4">
         <Avatar className="size-14 border border-accent/40">
