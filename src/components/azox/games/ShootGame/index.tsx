@@ -17,8 +17,6 @@ export default function ShootGame({
 }) {
   const { onNewGlobalBest } = useGameTasks();
   const gameRef = useRef<Game | null>(null);
-  const globalBest = useGlobalBest("shoot");
-
   const finalScoreRef = useRef(0);
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
