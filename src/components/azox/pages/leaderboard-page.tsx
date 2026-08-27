@@ -30,6 +30,9 @@ export function LeaderboardPage() {
   const { user } = useAzox();
   const activeThreshold = thresholdFor(activeRank);
 
+  const isCurrentUser = (rowName: string) =>
+    rowName === user.name || rowName === `@${user.username}`;
+
   const livePoints = live.byRank(activeRank);
   const pointRows = live.hasData ? livePoints : pointUsers;
   const taskRows = live.hasData
