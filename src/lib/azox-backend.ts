@@ -350,3 +350,63 @@ export async function fetchReferredUsers(
     return [];
   }
 }
+
+export type WalletRegistration = {
+  wallet_address: string;
+  registered_at: string | null;
+};
+
+/** ANY row for this telegram_id means the user is registered forever. */
+export async function fetchWalletRegistration(
+  telegramId: number,
+): Promise<WalletRegistration | null> {
+  try {
+    const { data, error } = await db
+      .from("wallet_registrations")
+      .select("wallet_address, registered_at")
+      .eq("telegram_id", telegramId)
+      .order("registered_at", { ascending: true })
+      .limit(1);
+    if (error) throw error;
+    const row = (data as WalletRegistration[] | null)?.[0];
+    return row ?? null;
+  } catch (e) {
+    console.error("[azox-backend] fetchWalletRegistration failed", e);
+    return null;
+  }
+}
+
+/** Saves a first-time registration and flags the user as airdrop registered. */
+export async function saveWalletRegistration(params: {
+  telegramId: number;
+  walletAddress: string;
+  chainId: number;
+  txHash: string;
+}): Promise<WalletRegistration | null> {
+  try {
+    const existing = await fetchWalletRegistration(params.telegramId);
+    if (existing) return existing;
+
+    const { error } = await db.from("wallet_registrations").insert({
+      telegram_id: params.telegramId,
+      wallet_address: params.walletAddress,
+      chain_id: params.chainId,
+      registration_fee: "0.0006",
+      payment_tx_hash: params.txHash,
+      payment_status: "confirmed",
+      is_current: true,
+    });
+    if (error) throw error;
+
+    const { error: userError } = await db
+      .from("users")
+      .update({ airdrop_registered: true })
+      .eq("telegram_id", params.telegramId);
+    if (userError) console.error("[azox-backend] airdrop_registered update failed", userError);
+
+    return await fetchWalletRegistration(params.telegramId);
+  } catch (e) {
+    console.error("[azox-backend] saveWalletRegistration failed", e);
+    return null;
+  }
+}

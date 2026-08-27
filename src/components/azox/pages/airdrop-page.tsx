@@ -15,6 +15,12 @@ import { waitForTransactionReceipt } from "@wagmi/core";
 import { encodeFunctionData, formatEther } from "viem";
 import { writeStorage } from "@/lib/points";
 import {
+  currentTelegramId,
+  fetchWalletRegistration,
+  saveWalletRegistration,
+  type WalletRegistration,
+} from "@/lib/azox-backend";
+import {
   AZOX_AIRDROP_ABI,
   AZOX_AIRDROP_ADDRESS,
   REGISTRATION_FEE,
@@ -154,6 +160,24 @@ export function AirdropPage() {
   const [confetti, setConfetti] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [dbRegistration, setDbRegistration] =
+    useState<WalletRegistration | null>(null);
+  const dbRegistrationRef = useRef<WalletRegistration | null>(null);
+  dbRegistrationRef.current = dbRegistration;
+
+  // Registration is permanent per telegram_id — check once on load.
+  useEffect(() => {
+    const telegramId = currentTelegramId();
+    if (!telegramId) return;
+    let active = true;
+    void fetchWalletRegistration(telegramId).then((row) => {
+      if (active && row) setDbRegistration(row);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
 
   useEffect(() => {
     const handler = () => {
@@ -212,11 +236,12 @@ export function AirdropPage() {
 
   const isWrongNetwork = isConnected && chainId !== robinhoodTestnet.id;
   const hasEnoughBalance = Boolean(balance && balance.value >= REQUIRED_BALANCE);
-  // On-chain eligibility is the ONLY proof of registration.
-  const isRegistered = isEligible === true;
+  // A stored registration for this telegram_id is permanent proof.
+  const isRegistered = isEligible === true || dbRegistration !== null;
   const busy = isTxPending || isConfirming;
 
   const handleRegister = async (auto = false) => {
+    if (dbRegistrationRef.current) return;
     if (registrationInFlightRef.current) return;
     registrationInFlightRef.current = true;
     resetTx();
@@ -331,6 +356,19 @@ export function AirdropPage() {
         return;
       }
       console.info("[airdrop] REGISTRATION_VERIFIED");
+      const telegramId = currentTelegramId();
+      if (telegramId) {
+        const saved = await saveWalletRegistration({
+          telegramId,
+          walletAddress: address,
+          chainId: robinhoodTestnet.id,
+          txHash: hash,
+        });
+        if (saved) setDbRegistration(saved);
+      }
+      writeStorage(KEYS.registered, true);
+      writeStorage(KEYS.address, address);
+      writeStorage(KEYS.date, new Date().toISOString());
       setConfetti(true);
       setTimeout(() => setConfetti(false), 2200);
     } catch (error) {
@@ -357,6 +395,7 @@ export function AirdropPage() {
       autoRegisterAttemptedRef.current = null;
       return;
     }
+    if (dbRegistration) return;
     if (!wasConnected && address) void handleRegister(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, address]);
@@ -446,10 +485,20 @@ export function AirdropPage() {
             <h2 className="text-base font-bold" style={{ color: GREEN }}>
               Airdrop Eligible!
             </h2>
-            {address && (
+            {(dbRegistration?.wallet_address ?? address) && (
               <p className="text-xs text-muted-foreground">
                 Wallet:{" "}
-                <code className="text-foreground">{shorten(address)}</code>
+                <code className="text-foreground">
+                  {shorten(dbRegistration?.wallet_address ?? address!)}
+                </code>
+              </p>
+            )}
+            {dbRegistration?.registered_at && (
+              <p className="text-xs text-muted-foreground">
+                Registered:{" "}
+                <span className="text-foreground">
+                  {new Date(dbRegistration.registered_at).toLocaleDateString()}
+                </span>
               </p>
             )}
             <p className="text-xs" style={{ color: GREEN }}>
@@ -457,10 +506,8 @@ export function AirdropPage() {
             </p>
             <button
               onClick={() => {
+                // UI-only: the stored registration stays valid forever.
                 disconnect();
-                writeStorage(KEYS.registered, false);
-                writeStorage(KEYS.address, "");
-                writeStorage(KEYS.date, "");
               }}
               style={{
                 marginTop: 12,
