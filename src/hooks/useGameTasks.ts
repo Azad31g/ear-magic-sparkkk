@@ -90,7 +90,7 @@ export function useGameTasks() {
       if (newScore <= 0) return 0;
 
       // Get global best from Supabase
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("game_scores")
         .select("score")
         .eq("game_id", gameId)
@@ -106,7 +106,7 @@ export function useGameTasks() {
       // New global best! Update Supabase and award tasks
       const tgUser = getTelegramUser();
       if (tgUser?.id) {
-        await supabase.from("game_scores").upsert(
+        await (supabase as any).from("game_scores").upsert(
           {
             telegram_id: tgUser.id,
             game_id: gameId,
