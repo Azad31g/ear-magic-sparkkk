@@ -13,7 +13,6 @@ import { useTakBomLogic } from "./useTakBomLogic";
 export default function TakBomGame() {
   const { addPoints } = useAzox();
   const finalScoreRef = useRef(0);
-  const globalBest = useGlobalBest("takbom");
 
   const game = useTakBomLogic((score) => {
     if (score > 0) addPoints(score);
