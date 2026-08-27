@@ -34,7 +34,14 @@ export function ProfilePage() {
     if (!tgUser?.id) return;
     let cancelled = false;
     void fetchTaskCount(tgUser.id).then((count) => {
-      if (!cancelled) setTasksDone(count + getGameTasksDone());
+      const total = count + getGameTasksDone();
+      if (!cancelled) setTasksDone(total);
+      if (tgUser?.id) {
+        void supabase
+          .from("users")
+          .update({ tasks_done: total })
+          .eq("telegram_id", tgUser.id);
+      }
     });
     return () => {
       cancelled = true;
