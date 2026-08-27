@@ -236,11 +236,12 @@ export function AirdropPage() {
 
   const isWrongNetwork = isConnected && chainId !== robinhoodTestnet.id;
   const hasEnoughBalance = Boolean(balance && balance.value >= REQUIRED_BALANCE);
-  // On-chain eligibility is the ONLY proof of registration.
-  const isRegistered = isEligible === true;
+  // A stored registration for this telegram_id is permanent proof.
+  const isRegistered = isEligible === true || dbRegistration !== null;
   const busy = isTxPending || isConfirming;
 
   const handleRegister = async (auto = false) => {
+    if (dbRegistrationRef.current) return;
     if (registrationInFlightRef.current) return;
     registrationInFlightRef.current = true;
     resetTx();
