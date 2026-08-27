@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { STORAGE_KEYS, readStorage, writeStorage } from "@/lib/points";
-import { getTelegramUser, initTelegram, type TelegramUser } from "@/lib/telegram";
+import { getStartParam, getTelegramUser, initTelegram, type TelegramUser } from "@/lib/telegram";
 import {
   referralLinkFor,
   syncTelegramUser,
   fetchUser,
+  registerReferral,
   type DbUser,
 } from "@/lib/azox-backend";
 
