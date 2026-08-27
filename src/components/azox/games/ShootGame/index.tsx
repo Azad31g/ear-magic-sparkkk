@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useGameTasks } from "@/hooks/useGameTasks";
+import { useGlobalBest } from "@/hooks/useGlobalBest";
 
 import { readStorage, writeStorage } from "@/lib/points";
 import { initTelegram } from "@/lib/telegram";
@@ -16,17 +17,17 @@ export default function ShootGame({
   onGameOver?: (score: number) => void;
 }) {
   const { onNewGlobalBest } = useGameTasks();
+  const { globalBest: best, refresh: refreshGlobalBest, bumpGlobalBest } =
+    useGlobalBest("shoot");
   const gameRef = useRef<Game | null>(null);
   const finalScoreRef = useRef(0);
   const [score, setScore] = useState(0);
-  const [best, setBest] = useState(0);
   const [timeMs, setTimeMs] = useState(0);
   const [paused, setPaused] = useState(false);
   const [over, setOver] = useState<ShootGameOverState | null>(null);
 
   useEffect(() => {
     initTelegram();
-    setBest(readStorage<number>(SHOOT_BEST_KEY, 0));
   }, []);
 
   const handleTogglePause = () => {
@@ -68,14 +69,14 @@ export default function ShootGame({
           finalScoreRef.current = p.finalScore;
           const previousBest = readStorage<number>(SHOOT_BEST_KEY, 0);
           const newRecord = p.finalScore > previousBest;
-          if (newRecord) {
-            writeStorage(SHOOT_BEST_KEY, p.finalScore);
-            setBest(p.finalScore);
-          }
+          if (newRecord) writeStorage(SHOOT_BEST_KEY, p.finalScore);
           setOver({ ...p, newRecord });
           onNewGlobalBest("shoot", finalScoreRef.current).then((earnedTasks) => {
             if (earnedTasks > 0) {
+              bumpGlobalBest(p.finalScore);
               toast.success("+10 Tasks earned! 🏆 New Global Best!");
+            } else {
+              void refreshGlobalBest();
             }
           });
           onGameOver?.(p.finalScore);

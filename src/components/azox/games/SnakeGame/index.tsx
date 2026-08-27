@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useAzox } from "@/components/azox/app-provider";
 import { useGameTasks } from "@/hooks/useGameTasks";
+import { useGlobalBest } from "@/hooks/useGlobalBest";
 
 import { GameBoard } from "./GameBoard";
 import { GameHeader } from "./GameHeader";
@@ -20,6 +21,8 @@ export default function SnakeGame() {
   });
 
   const { onNewGlobalBest } = useGameTasks();
+  const { globalBest, refresh: refreshGlobalBest, bumpGlobalBest } =
+    useGlobalBest("snake");
   const overFiredRef = useRef(false);
 
   useEffect(() => {
@@ -29,10 +32,16 @@ export default function SnakeGame() {
     }
     if (overFiredRef.current) return;
     overFiredRef.current = true;
-    onNewGlobalBest("snake", finalScoreRef.current).then((earnedTasks) => {
-      if (earnedTasks > 0) toast.success("+10 Tasks earned! 🏆 New Global Best!");
+    const finalScore = finalScoreRef.current;
+    onNewGlobalBest("snake", finalScore).then((earnedTasks) => {
+      if (earnedTasks > 0) {
+        bumpGlobalBest(finalScore);
+        toast.success("+10 Tasks earned! 🏆 New Global Best!");
+      } else {
+        void refreshGlobalBest();
+      }
     });
-  }, [game.state, game.score, onNewGlobalBest]);
+  }, [game.state, game.score, onNewGlobalBest, bumpGlobalBest, refreshGlobalBest]);
 
   return (
     <div
@@ -45,7 +54,7 @@ export default function SnakeGame() {
             points={points}
             onMenu={() => (game.state === "paused" ? game.resume() : game.pause())}
           />
-          <ScoreCards score={game.score} best={game.best} />
+          <ScoreCards score={game.score} best={globalBest} />
         </div>
 
       <div className="mt-3 flex w-full justify-center">
@@ -76,9 +85,9 @@ export default function SnakeGame() {
                 <div className="mt-1 text-xs text-muted-foreground">
                   or press any arrow / WASD key
                 </div>
-                {game.best > 0 ? (
+                {globalBest > 0 ? (
                   <div className="mt-3 text-xs text-muted-foreground">
-                    Best: <span className="font-bold text-gold">{game.best.toLocaleString()}</span>
+                    Best: <span className="font-bold text-gold">{globalBest.toLocaleString()}</span>
                   </div>
                 ) : null}
               </div>

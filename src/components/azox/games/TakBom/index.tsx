@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useAzox } from "@/components/azox/app-provider";
 import { useGameTasks } from "@/hooks/useGameTasks";
+import { useGlobalBest } from "@/hooks/useGlobalBest";
 
 import { FallingObject } from "./FallingObject";
 import { GameGrid } from "./GameGrid";
@@ -20,6 +21,8 @@ export default function TakBomGame() {
   });
 
   const { onNewGlobalBest } = useGameTasks();
+  const { globalBest, refresh: refreshGlobalBest, bumpGlobalBest } =
+    useGlobalBest("takbom");
   const overFiredRef = useRef(false);
 
   useEffect(() => {
@@ -29,10 +32,16 @@ export default function TakBomGame() {
     }
     if (overFiredRef.current) return;
     overFiredRef.current = true;
-    onNewGlobalBest("takbom", finalScoreRef.current).then((earnedTasks) => {
-      if (earnedTasks > 0) toast.success("+10 Tasks earned! 🏆 New Global Best!");
+    const finalScore = finalScoreRef.current;
+    onNewGlobalBest("takbom", finalScore).then((earnedTasks) => {
+      if (earnedTasks > 0) {
+        bumpGlobalBest(finalScore);
+        toast.success("+10 Tasks earned! 🏆 New Global Best!");
+      } else {
+        void refreshGlobalBest();
+      }
     });
-  }, [game.state, game.score, onNewGlobalBest]);
+  }, [game.state, game.score, onNewGlobalBest, bumpGlobalBest, refreshGlobalBest]);
 
   const [flash, setFlash] = useState(false);
   useEffect(() => {
@@ -49,7 +58,7 @@ export default function TakBomGame() {
           <GameHeader
             onMenu={() => (game.state === "paused" ? game.resume() : game.pause())}
           />
-          <ScoreBar timeLeft={game.timeLeft} score={game.score} best={game.best} />
+          <ScoreBar timeLeft={game.timeLeft} score={game.score} best={globalBest} />
         </div>
 
         <div className="relative flex-1 overflow-hidden">
@@ -141,7 +150,7 @@ export default function TakBomGame() {
                 <div className="mt-1 text-xs text-muted-foreground">
                   Best:{" "}
                   <span className="font-bold text-gold">
-                    {game.best.toLocaleString()}
+                    {globalBest.toLocaleString()}
                   </span>
                 </div>
                 <div className="mt-4 flex flex-col gap-2">
