@@ -83,20 +83,12 @@ export function AnnouncementsPage() {
           {sorted.map((a) => {
             const unread = !read.includes(a.id);
             return (
-              <li key={a.id} className="relative pl-2.5">
-                <span
-                  className="pointer-events-none absolute inset-y-0 left-[7px] z-10 w-[7px] overflow-hidden"
-                  aria-hidden="true"
-                >
-                  <span className="absolute inset-y-0 left-0 w-[calc(100vw-2.5rem)] max-w-md rounded-3xl border-[3px] border-[#ff7a18]" />
-                </span>
+              <li key={a.id}>
                 <button
                   type="button"
                   onClick={() => openAnnouncement(a)}
-                  className="relative w-full overflow-hidden rounded-3xl border border-border bg-card/70 px-4 py-3 text-left transition-colors duration-150 hover:bg-card active:scale-[0.99] active:bg-secondary"
+                  className="relative w-full overflow-hidden rounded-3xl border border-border border-l-[3px] border-l-[#ff7a18] bg-card/70 px-4 py-3 text-left transition-colors duration-150 hover:bg-card active:scale-[0.99] active:bg-secondary"
                 >
-
-
                   <span className="relative block min-w-0">
                     <span className="flex items-center gap-2">
                       <span className="truncate text-[14px] font-bold leading-tight text-foreground">
@@ -118,7 +110,6 @@ export function AnnouncementsPage() {
                   </span>
                 </button>
               </li>
-
             );
           })}
         </ul>
