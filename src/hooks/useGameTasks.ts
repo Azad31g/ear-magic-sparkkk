@@ -41,7 +41,7 @@ async function syncGameTasksToSupabase(gameTasks: number) {
 
   const totalTasks = (socialCount ?? 0) + gameTasks;
 
-  void (supabase as any)
+  await (supabase as any)
     .from("users")
     .update({ tasks_done: totalTasks })
     .eq("telegram_id", tgUser.id);

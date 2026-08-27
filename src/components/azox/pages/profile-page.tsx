@@ -10,6 +10,7 @@ import { RANKS, formatPoints, nextRank as getNextRank } from "@/lib/azox-data";
 import { fetchTaskCount, referralLinkFor } from "@/lib/azox-backend";
 import { useGameTasks } from "@/hooks/useGameTasks";
 import { getTelegramUser } from "@/lib/telegram";
+import { supabase } from "@/integrations/supabase/client";
 
 export function ProfilePage() {
   const { user, dbUser, points, rank, completedTasks, referrals } = useAzox();
@@ -33,7 +34,14 @@ export function ProfilePage() {
     if (!tgUser?.id) return;
     let cancelled = false;
     void fetchTaskCount(tgUser.id).then((count) => {
-      if (!cancelled) setTasksDone(count + getGameTasksDone());
+      const total = count + getGameTasksDone();
+      if (!cancelled) setTasksDone(total);
+      if (tgUser?.id) {
+        void (supabase as any)
+          .from("users")
+          .update({ tasks_done: total })
+          .eq("telegram_id", tgUser.id);
+      }
     });
     return () => {
       cancelled = true;
