@@ -103,7 +103,50 @@ export async function addPointsRemote(amount: number): Promise<number | null> {
   }
 }
 
-/** Records a completed task, bumps tasks_done and awards the points. */
+/** True number of unique tasks completed by a user (source of truth). */
+export async function fetchTaskCount(telegramId: number): Promise<number> {
+  try {
+    const { count, error } = await db
+      .from("user_tasks")
+      .select("task_id", { count: "exact", head: true })
+      .eq("telegram_id", telegramId);
+    if (error) throw error;
+    return count ?? 0;
+  } catch (e) {
+    console.error("[azox-backend] fetchTaskCount failed", e);
+    return 0;
+  }
+}
+
+/** Unique task counts for every user, keyed by telegram_id. */
+export async function fetchAllTaskCounts(): Promise<Map<number, number>> {
+  const counts = new Map<number, number>();
+  try {
+    const { data, error } = await db
+      .from("user_tasks")
+      .select("telegram_id, task_id")
+      .limit(50000);
+    if (error) throw error;
+    const seen = new Set<string>();
+    for (const row of (data ?? []) as {
+      telegram_id: number;
+      task_id: string;
+    }[]) {
+      const key = `${row.telegram_id}:${row.task_id}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      counts.set(row.telegram_id, (counts.get(row.telegram_id) ?? 0) + 1);
+    }
+  } catch (e) {
+    console.error("[azox-backend] fetchAllTaskCounts failed", e);
+  }
+  return counts;
+}
+
+/**
+ * Records a completed task exactly once (telegram_id + task_id), then mirrors
+ * the real user_tasks count into users.tasks_done.
+ */
 export async function recordTaskCompletion(
   taskId: string,
   points = 0,
@@ -111,25 +154,33 @@ export async function recordTaskCompletion(
   const telegramId = currentTelegramId();
   if (!telegramId) return;
   try {
-    await db
+    const { data: existing } = await db
       .from("user_tasks")
-      .upsert(
-        { telegram_id: telegramId, task_id: taskId },
-        { onConflict: "telegram_id,task_id" },
-      );
+      .select("task_id")
+      .eq("telegram_id", telegramId)
+      .eq("task_id", taskId)
+      .maybeSingle();
 
-    const user = await fetchUser(telegramId);
-    if (user) {
+    if (!existing) {
       await db
-        .from("users")
-        .update({ tasks_done: (user.tasks_done ?? 0) + 1 })
-        .eq("telegram_id", telegramId);
+        .from("user_tasks")
+        .upsert(
+          { telegram_id: telegramId, task_id: taskId },
+          { onConflict: "telegram_id,task_id" },
+        );
     }
+
+    const realCount = await fetchTaskCount(telegramId);
+    await db
+      .from("users")
+      .update({ tasks_done: realCount })
+      .eq("telegram_id", telegramId);
   } catch (e) {
     console.error("[azox-backend] recordTaskCompletion failed", e);
   }
   if (points > 0) await addPointsRemote(points);
 }
+
 
 /** Saves a game score (one row per game per user). */
 export async function saveGameScore(
