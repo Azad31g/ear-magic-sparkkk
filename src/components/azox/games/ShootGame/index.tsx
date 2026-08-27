@@ -74,10 +74,11 @@ export default function ShootGame({
           }
           setOver({ ...p, newRecord });
           if (newRecord) {
-            const earnedTasks = onNewGlobalBest("shoot", finalScoreRef.current);
-            if (earnedTasks > 0) {
-              toast.success("+10 Tasks earned! 🏆 New Global Best!");
-            }
+            onNewGlobalBest("shoot", finalScoreRef.current).then((earnedTasks) => {
+              if (earnedTasks > 0) {
+                toast.success("+10 Tasks earned! 🏆 New Global Best!");
+              }
+            });
           }
           onGameOver?.(p.finalScore);
           try {
