@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Copy, Check, Users, Coins, Zap, Trophy, ChevronRight } from "lucide-react";
+import { Copy, Check, Users, Coins, Zap, Trophy, ChevronRight, Share2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -57,6 +57,11 @@ export function ProfilePage() {
     } catch {
       setCopied(false);
     }
+  };
+
+  const share = () => {
+    const url = `https://t.me/share/url?url=${encodeURIComponent(referral)}&text=${encodeURIComponent("Join AZOX and start earning points!")}`;
+    window.open(url, "_blank");
   };
 
   const stats = [
@@ -180,6 +185,14 @@ export function ProfilePage() {
               <Copy className="size-4" aria-hidden="true" />
             )}
             {copied ? "Copied" : "Copy"}
+          </Button>
+          <Button
+            onClick={share}
+            variant="outline"
+            className="rounded-xl border-accent/50 font-semibold text-accent"
+          >
+            <Share2 className="size-4" aria-hidden="true" />
+            Share
           </Button>
         </div>
       </section>
