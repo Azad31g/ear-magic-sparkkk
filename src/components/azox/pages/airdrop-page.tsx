@@ -485,10 +485,20 @@ export function AirdropPage() {
             <h2 className="text-base font-bold" style={{ color: GREEN }}>
               Airdrop Eligible!
             </h2>
-            {address && (
+            {(dbRegistration?.wallet_address ?? address) && (
               <p className="text-xs text-muted-foreground">
                 Wallet:{" "}
-                <code className="text-foreground">{shorten(address)}</code>
+                <code className="text-foreground">
+                  {shorten(dbRegistration?.wallet_address ?? address!)}
+                </code>
+              </p>
+            )}
+            {dbRegistration?.registered_at && (
+              <p className="text-xs text-muted-foreground">
+                Registered:{" "}
+                <span className="text-foreground">
+                  {new Date(dbRegistration.registered_at).toLocaleDateString()}
+                </span>
               </p>
             )}
             <p className="text-xs" style={{ color: GREEN }}>
@@ -496,10 +506,8 @@ export function AirdropPage() {
             </p>
             <button
               onClick={() => {
+                // UI-only: the stored registration stays valid forever.
                 disconnect();
-                writeStorage(KEYS.registered, false);
-                writeStorage(KEYS.address, "");
-                writeStorage(KEYS.date, "");
               }}
               style={{
                 marginTop: 12,
