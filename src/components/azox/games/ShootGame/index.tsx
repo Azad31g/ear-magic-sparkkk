@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useGameTasks } from "@/hooks/useGameTasks";
-import { useGlobalBest } from "@/hooks/useGlobalBest";
 
 import { readStorage, writeStorage } from "@/lib/points";
 import { initTelegram } from "@/lib/telegram";
