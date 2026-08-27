@@ -20,6 +20,8 @@ export default function SnakeGame() {
   });
 
   const { onNewGlobalBest } = useGameTasks();
+  const { globalBest, refresh: refreshGlobalBest, bumpGlobalBest } =
+    useGlobalBest("snake");
   const overFiredRef = useRef(false);
 
   useEffect(() => {
@@ -29,10 +31,16 @@ export default function SnakeGame() {
     }
     if (overFiredRef.current) return;
     overFiredRef.current = true;
-    onNewGlobalBest("snake", finalScoreRef.current).then((earnedTasks) => {
-      if (earnedTasks > 0) toast.success("+10 Tasks earned! 🏆 New Global Best!");
+    const finalScore = finalScoreRef.current;
+    onNewGlobalBest("snake", finalScore).then((earnedTasks) => {
+      if (earnedTasks > 0) {
+        bumpGlobalBest(finalScore);
+        toast.success("+10 Tasks earned! 🏆 New Global Best!");
+      } else {
+        void refreshGlobalBest();
+      }
     });
-  }, [game.state, game.score, onNewGlobalBest]);
+  }, [game.state, game.score, onNewGlobalBest, bumpGlobalBest, refreshGlobalBest]);
 
   return (
     <div
