@@ -186,6 +186,8 @@ export function LeaderboardPage() {
                 position={i + 1}
                 name={u.name}
                 value={u.tasks.toLocaleString("en-US")}
+                photoUrl={isCurrentUser(u.name) ? user.photoUrl : undefined}
+                initials={isCurrentUser(u.name) ? user.initials : undefined}
               />
             ))}
           </ul>
