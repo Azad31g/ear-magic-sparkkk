@@ -8,6 +8,7 @@ import { useAzox } from "@/components/azox/app-provider";
 import { AzoxFooter } from "@/components/azox/footer";
 import { RANKS, formatPoints, nextRank as getNextRank } from "@/lib/azox-data";
 import { fetchTaskCount, referralLinkFor } from "@/lib/azox-backend";
+import { useGameTasks } from "@/hooks/useGameTasks";
 import { getTelegramUser } from "@/lib/telegram";
 
 export function ProfilePage() {
