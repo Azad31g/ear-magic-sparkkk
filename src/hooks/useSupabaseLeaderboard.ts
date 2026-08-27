@@ -37,12 +37,17 @@ function toPlayer(row: LeaderboardRow): LivePlayer {
 /** Real leaderboard rows from the backend, grouped by rank. */
 export function useSupabaseLeaderboard() {
   const [players, setPlayers] = useState<LivePlayer[] | null>(null);
+  const [taskPlayers, setTaskPlayers] = useState<LivePlayer[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    void fetchLeaderboard("points", 200).then((rows) => {
+    Promise.all([
+      fetchLeaderboard("points", 200),
+      fetchLeaderboard("tasks_done", 100),
+    ]).then(([pointRows, taskRows]) => {
       if (cancelled) return;
-      setPlayers(rows.length ? rows.map(toPlayer) : []);
+      setPlayers(pointRows.length ? pointRows.map(toPlayer) : []);
+      setTaskPlayers(taskRows.length ? taskRows.map(toPlayer) : []);
     });
     return () => {
       cancelled = true;
@@ -56,7 +61,9 @@ export function useSupabaseLeaderboard() {
       .map((p, i) => ({ ...p, position: i + 1 }));
 
   const byTasks = () =>
-    [...(players ?? [])].sort((a, b) => b.tasks - a.tasks).slice(0, 50);
+    (taskPlayers ?? [])
+      .sort((a, b) => b.tasks - a.tasks)
+      .slice(0, 100);
 
   const byReferrals = () =>
     [...(players ?? [])].sort((a, b) => b.referrals - a.referrals).slice(0, 50);
