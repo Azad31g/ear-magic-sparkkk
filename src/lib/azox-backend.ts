@@ -299,3 +299,54 @@ export async function fetchLeaderboard(
     return [];
   }
 }
+
+/* ------------------------------- Referrals ------------------------------- */
+
+export type ReferredUser = {
+  telegram_id: number;
+  username: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  photo_url: string | null;
+  points: number;
+  joined_at: string | null;
+};
+
+/**
+ * Attributes the current Telegram user to the owner of `code`.
+ * The database enforces one-time attribution and the single +1000 reward.
+ * Returns true only when a brand-new referral was recorded.
+ */
+export async function registerReferral(code: string | null): Promise<boolean> {
+  const telegramId = currentTelegramId();
+  if (!telegramId || !code) return false;
+  try {
+    const { data, error } = await db.rpc("register_referral", {
+      p_referred_id: telegramId,
+      p_referral_code: code,
+    });
+    if (error) throw error;
+    return data === true;
+  } catch (e) {
+    console.error("[azox-backend] register_referral failed", e);
+    return false;
+  }
+}
+
+/** Users who joined through this user's referral link. */
+export async function fetchReferredUsers(
+  telegramId: number,
+): Promise<ReferredUser[]> {
+  try {
+    const { data, error } = await db
+      .from("users")
+      .select("telegram_id, username, first_name, last_name, photo_url, points, joined_at")
+      .eq("referred_by", telegramId)
+      .order("joined_at", { ascending: false });
+    if (error) throw error;
+    return (data as ReferredUser[]) ?? [];
+  } catch (e) {
+    console.error("[azox-backend] fetchReferredUsers failed", e);
+    return [];
+  }
+}
