@@ -16,6 +16,7 @@ import { Route as AnnouncementsRouteImport } from './routes/announcements'
 import { Route as GamingRouteImport } from './routes/gaming'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as ReferralsRouteImport } from './routes/referrals'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as GamesGameRouteImport } from './routes/games.$game'
 import { Route as ApiPublicInstagramWebhookRouteImport } from './routes/api/public/instagram/webhook'
@@ -55,6 +56,11 @@ const ProfileRoute = ProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReferralsRoute = ReferralsRouteImport.update({
+  id: '/referrals',
+  path: '/referrals',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TasksRoute = TasksRouteImport.update({
   id: '/tasks',
   path: '/tasks',
@@ -80,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/gaming': typeof GamingRoute
   '/leaderboard': typeof LeaderboardRoute
   '/profile': typeof ProfileRoute
+  '/referrals': typeof ReferralsRoute
   '/tasks': typeof TasksRoute
   '/games/$game': typeof GamesGameRoute
   '/api/public/instagram/webhook': typeof ApiPublicInstagramWebhookRoute
@@ -92,6 +99,7 @@ export interface FileRoutesByTo {
   '/gaming': typeof GamingRoute
   '/leaderboard': typeof LeaderboardRoute
   '/profile': typeof ProfileRoute
+  '/referrals': typeof ReferralsRoute
   '/tasks': typeof TasksRoute
   '/games/$game': typeof GamesGameRoute
   '/api/public/instagram/webhook': typeof ApiPublicInstagramWebhookRoute
@@ -105,6 +113,7 @@ export interface FileRoutesById {
   '/gaming': typeof GamingRoute
   '/leaderboard': typeof LeaderboardRoute
   '/profile': typeof ProfileRoute
+  '/referrals': typeof ReferralsRoute
   '/tasks': typeof TasksRoute
   '/games/$game': typeof GamesGameRoute
   '/api/public/instagram/webhook': typeof ApiPublicInstagramWebhookRoute
@@ -119,6 +128,7 @@ export interface FileRouteTypes {
     | '/gaming'
     | '/leaderboard'
     | '/profile'
+    | '/referrals'
     | '/tasks'
     | '/games/$game'
     | '/api/public/instagram/webhook'
@@ -131,6 +141,7 @@ export interface FileRouteTypes {
     | '/gaming'
     | '/leaderboard'
     | '/profile'
+    | '/referrals'
     | '/tasks'
     | '/games/$game'
     | '/api/public/instagram/webhook'
@@ -143,6 +154,7 @@ export interface FileRouteTypes {
     | '/gaming'
     | '/leaderboard'
     | '/profile'
+    | '/referrals'
     | '/tasks'
     | '/games/$game'
     | '/api/public/instagram/webhook'
@@ -156,6 +168,7 @@ export interface RootRouteChildren {
   GamingRoute: typeof GamingRoute
   LeaderboardRoute: typeof LeaderboardRoute
   ProfileRoute: typeof ProfileRoute
+  ReferralsRoute: typeof ReferralsRoute
   TasksRoute: typeof TasksRoute
   GamesGameRoute: typeof GamesGameRoute
   ApiPublicInstagramWebhookRoute: typeof ApiPublicInstagramWebhookRoute
@@ -212,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/referrals': {
+      id: '/referrals'
+      path: '/referrals'
+      fullPath: '/referrals'
+      preLoaderRoute: typeof ReferralsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tasks': {
       id: '/tasks'
       path: '/tasks'
@@ -244,6 +264,7 @@ const rootRouteChildren: RootRouteChildren = {
   GamingRoute: GamingRoute,
   LeaderboardRoute: LeaderboardRoute,
   ProfileRoute: ProfileRoute,
+  ReferralsRoute: ReferralsRoute,
   TasksRoute: TasksRoute,
   GamesGameRoute: GamesGameRoute,
   ApiPublicInstagramWebhookRoute: ApiPublicInstagramWebhookRoute,
