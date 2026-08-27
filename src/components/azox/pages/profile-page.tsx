@@ -6,7 +6,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { useAzox } from "@/components/azox/app-provider";
 import { AzoxFooter } from "@/components/azox/footer";
-import { useGameTasks } from "@/hooks/useGameTasks";
 import { RANKS, formatPoints, nextRank as getNextRank } from "@/lib/azox-data";
 import { fetchTaskCount, referralLinkFor } from "@/lib/azox-backend";
 import { getTelegramUser } from "@/lib/telegram";
