@@ -2,95 +2,46 @@ import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { readStorage, writeStorage } from "@/lib/points";
 import { getTelegramUser } from "@/lib/telegram";
+import { recordTaskUnits } from "@/lib/azox-backend";
 
-const STORAGE_KEY = "azox_game_tasks";
 const STREAK_KEY = "azox_daily_streak";
-
-type GameTasksState = {
-  tasksDone: number;
-  completedOnce: string[];
-};
 
 type StreakState = {
   dates: string[];
 };
 
-function loadState(): GameTasksState {
-  const raw = readStorage<Partial<GameTasksState>>(STORAGE_KEY, {});
-  return {
-    tasksDone: typeof raw?.tasksDone === "number" ? raw.tasksDone : 0,
-    completedOnce: Array.isArray(raw?.completedOnce) ? raw.completedOnce : [],
-  };
-}
-
-function saveState(s: GameTasksState) {
-  writeStorage(STORAGE_KEY, s);
+function today() {
+  return new Date().toISOString().split("T")[0] as string;
 }
 
 /**
- * Total tasks_done = social tasks from user_tasks + game tasks from localStorage.
+ * All game achievements are written as real rows in user_tasks — the single
+ * source of truth for the task count shown in Profile and Task Rank.
  */
-async function syncGameTasksToSupabase(gameTasks: number) {
-  const tgUser = getTelegramUser();
-  if (!tgUser?.id) return;
-
-  const { count: socialCount } = await (supabase as any)
-    .from("user_tasks")
-    .select("*", { count: "exact", head: true })
-    .eq("telegram_id", tgUser.id);
-
-  const totalTasks = (socialCount ?? 0) + gameTasks;
-
-  await (supabase as any)
-    .from("users")
-    .update({ tasks_done: totalTasks })
-    .eq("telegram_id", tgUser.id);
-}
-
 export function useGameTasks() {
-  // AZOX Word — +2 Tasks when ALL 5 words answered correctly
+  // AZOX Word — +2 Tasks when ALL 5 words answered correctly (once per day)
   const onWordComplete = useCallback((allCorrect: boolean) => {
     if (!allCorrect) return 0;
-    const state = loadState();
-    const today = new Date().toISOString().split("T")[0];
-    const key = `game-word-complete-${today}`;
-    if (state.completedOnce.includes(key)) return 0;
-    state.completedOnce.push(key);
-    state.tasksDone += 2;
-    saveState(state);
-    void syncGameTasksToSupabase(state.tasksDone);
+    void recordTaskUnits(`game-word-complete-${today()}`, 2);
     return 2;
   }, []);
 
-  // AZOX Box — +1 Task when box opened successfully
+  // AZOX Box — +1 Task when box opened successfully (once per box/day)
   const onBoxOpen = useCallback(() => {
-    const state = loadState();
-    state.tasksDone += 1;
-    saveState(state);
-    void syncGameTasksToSupabase(state.tasksDone);
+    void recordTaskUnits(`game-box-open-${today()}`, 1);
     return 1;
   }, []);
 
-  // Question Day — +2 Tasks when ALL questions answered correctly
+  // Question Day — +2 Tasks when ALL questions answered correctly (once per day)
   const onQuestionComplete = useCallback((allCorrect: boolean) => {
     if (!allCorrect) return 0;
-    const state = loadState();
-    const today = new Date().toISOString().split("T")[0];
-    const key = `game-question-complete-${today}`;
-    if (state.completedOnce.includes(key)) return 0;
-    state.completedOnce.push(key);
-    state.tasksDone += 2;
-    saveState(state);
-    void syncGameTasksToSupabase(state.tasksDone);
+    void recordTaskUnits(`game-question-complete-${today()}`, 2);
     return 2;
   }, []);
 
   // Global Button — +1 Task each time successfully pressed
   const onGlobalButtonWin = useCallback(() => {
-    const state = loadState();
-    state.tasksDone += 1;
-    saveState(state);
-    void syncGameTasksToSupabase(state.tasksDone);
+    void recordTaskUnits(`game-global-button-${Date.now()}`, 1);
     return 1;
   }, []);
 
@@ -135,11 +86,8 @@ export function useGameTasks() {
         );
       }
 
-      // Award +10 tasks
-      const state = loadState();
-      state.tasksDone += 10;
-      saveState(state);
-      void syncGameTasksToSupabase(state.tasksDone);
+      // Award +10 tasks, idempotent per world record
+      await recordTaskUnits(`game-world-record-${gameId}-${newScore}`, 10);
 
       return 10;
     },
@@ -148,12 +96,11 @@ export function useGameTasks() {
 
   // Daily Gift streak — +3 Tasks every 5 consecutive days
   const onDailyGiftClaimed = useCallback(() => {
-    const state = loadState();
     const streak = readStorage<StreakState>(STREAK_KEY, { dates: [] });
-    const today = new Date().toISOString().split("T")[0] as string;
+    const day = today();
 
-    if (!streak.dates.includes(today)) {
-      streak.dates.push(today);
+    if (!streak.dates.includes(day)) {
+      streak.dates.push(day);
       if (streak.dates.length > 10) streak.dates = streak.dates.slice(-10);
     }
 
@@ -172,18 +119,15 @@ export function useGameTasks() {
       }
       if (consecutive) {
         tasksEarned = 3;
-        state.tasksDone += 3;
+        void recordTaskUnits(`game-streak-${day}`, 3);
         streak.dates = [];
       }
     }
 
     writeStorage(STREAK_KEY, streak);
-    saveState(state);
-    if (tasksEarned > 0) void syncGameTasksToSupabase(state.tasksDone);
     return tasksEarned;
   }, []);
 
-  const getGameTasksDone = useCallback(() => loadState().tasksDone, []);
   const getStreak = useCallback(
     () => readStorage<StreakState>(STREAK_KEY, { dates: [] }).dates.length,
     [],
@@ -196,7 +140,6 @@ export function useGameTasks() {
     onGlobalButtonWin,
     onNewGlobalBest,
     onDailyGiftClaimed,
-    getGameTasksDone,
     getStreak,
   };
 }
