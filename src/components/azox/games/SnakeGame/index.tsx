@@ -13,7 +13,6 @@ import { useSnakeLogic } from "./useSnakeLogic";
 export default function SnakeGame() {
   const { points, addPoints } = useAzox();
   const finalScoreRef = useRef(0);
-  const globalBest = useGlobalBest("snake");
 
   const game = useSnakeLogic((score) => {
     if (score > 0) addPoints(score);
