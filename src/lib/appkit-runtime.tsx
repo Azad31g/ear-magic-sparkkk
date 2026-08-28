@@ -23,31 +23,26 @@ type TgWebApp = {
   openTelegramLink?: (url: string) => void;
 };
 
-// AppKit generates the correct wallet link (deep link or universal link) on its
-// own. We must NOT rewrite it, and we must NOT route it through Telegram's
-// in-app browser (tg.openLink), which breaks the WalletConnect return flow.
-// Only genuine Telegram links (t.me / tg://) are handed to Telegram's APIs;
-// everything else falls through to the native window.open so AppKit and
-// WalletConnect keep full control of launch and callback.
 function patchTelegramWindowOpen() {
   if (typeof window === "undefined") return;
   const tg = (window as unknown as { Telegram?: { WebApp?: TgWebApp } }).Telegram
     ?.WebApp;
   if (!tg) return;
-  const nativeOpen = window.open.bind(window);
-  window.open = ((url?: string | URL, ...rest: unknown[]) => {
+  window.open = ((url?: string | URL) => {
     const href = String(url ?? "");
     try {
-      if (href.startsWith("https://t.me/") || href.startsWith("tg://")) {
-        if (tg.openTelegramLink) {
-          tg.openTelegramLink(href);
-          return null;
-        }
+      if (href.startsWith("https://t.me") || href.startsWith("tg://")) {
+        tg.openTelegramLink?.(href);
+      } else if (href.startsWith("http")) {
+        tg.openLink?.(href);
+      } else {
+        // Custom wallet schemes (metamask://, trust://…)
+        window.location.href = href;
       }
-    } catch (err) {
-      console.error("[appkit-runtime] failed to open telegram link", err);
+    } catch {
+      window.location.href = href;
     }
-    return nativeOpen(href, ...(rest as []));
+    return null;
   }) as typeof window.open;
 }
 
