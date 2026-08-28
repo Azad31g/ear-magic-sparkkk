@@ -23,55 +23,34 @@ type TgWebApp = {
   openTelegramLink?: (url: string) => void;
 };
 
-// Telegram's WebView cannot handle custom wallet schemes (metamask://,
-// trust://…): navigating to them shows "ERR_UNKNOWN_URL_SCHEME" and kills the
-// Mini App. Convert known wallet deep links to their https universal-link
-// equivalents and always hand them to Telegram's openLink API.
-function toUniversalLink(href: string): string | null {
-  const map: Record<string, string> = {
-    "metamask:": "https://metamask.app.link",
-    "trust:": "https://link.trustwallet.com",
-    "rainbow:": "https://rnbwapp.com",
-    "ledgerlive:": "https://ledger.com/ledger-live",
-    "safe:": "https://app.safe.global",
-    "zerion:": "https://wallet.zerion.io",
-    "uniswap:": "https://uniswap.org/app",
-    "okex:": "https://www.okx.com/download",
-    "bnc:": "https://app.binance.com",
-  };
-  const match = Object.keys(map).find((s) => href.startsWith(s));
-  if (!match) return null;
-  const rest = href.slice(match.length).replace(/^\/+/, "");
-  return `${map[match]}/${rest}`;
-}
-
+// AppKit generates the correct wallet link (deep link or universal link) on its
+// own. We must NOT rewrite it. The only Telegram-specific need is that
+// window.open() is a no-op in Telegram's WebView, so hand the URL — unchanged —
+// to Telegram's own link APIs.
 function patchTelegramWindowOpen() {
   if (typeof window === "undefined") return;
   const tg = (window as unknown as { Telegram?: { WebApp?: TgWebApp } }).Telegram
     ?.WebApp;
   if (!tg) return;
-  window.open = ((url?: string | URL) => {
+  const nativeOpen = window.open.bind(window);
+  window.open = ((url?: string | URL, ...rest: unknown[]) => {
     const href = String(url ?? "");
     try {
       if (href.startsWith("https://t.me") || href.startsWith("tg://")) {
         tg.openTelegramLink?.(href);
-      } else if (href.startsWith("http")) {
-        tg.openLink?.(href);
-      } else {
-        // Custom wallet schemes → universal https link, opened externally.
-        const universal = toUniversalLink(href);
-        if (universal) {
-          tg.openLink?.(universal);
-        } else {
-          tg.openLink?.(href);
-        }
+        return null;
+      }
+      if (tg.openLink) {
+        tg.openLink(href);
+        return null;
       }
     } catch (err) {
       console.error("[appkit-runtime] failed to open wallet link", err);
     }
-    return null;
+    return nativeOpen(href, ...(rest as []));
   }) as typeof window.open;
 }
+
 
 
 patchTelegramWindowOpen();
