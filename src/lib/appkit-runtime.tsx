@@ -46,9 +46,6 @@ function patchTelegramWindowOpen() {
   }) as typeof window.open;
 }
 
-
-
-
 patchTelegramWindowOpen();
 
 // DIAGNOSTIC: log Telegram environment
